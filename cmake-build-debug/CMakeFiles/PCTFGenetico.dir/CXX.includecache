@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/matheus/CLionProjects/PCTFGenetico/pctfga.cpp
+pctfga.h
+/home/matheus/CLionProjects/PCTFGenetico/pctfga.h
+math.h
+-
+time.h
+-
+omp.h
+-
+cstring
+-
+
+/home/matheus/CLionProjects/PCTFGenetico/pctfga.h
+iostream
+-
+

@@ -1,0 +1,4 @@
+/home/matheus/Programas/clion-2019.2.3/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/matheus/CLionProjects/PCTFGenetico
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/matheus/CLionProjects/PCTFGenetico/cmake-build-debug
