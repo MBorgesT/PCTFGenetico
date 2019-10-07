@@ -6,10 +6,10 @@
 
 #IncludeRegexTransform: 
 
-/home/matheus/CLionProjects/PCTFGenetico/pctfga.cpp
+C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.cpp
 pctfga.h
-/home/matheus/CLionProjects/PCTFGenetico/pctfga.h
-math.h
+C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.h
+conio.h
 -
 time.h
 -
@@ -17,8 +17,16 @@ omp.h
 -
 cstring
 -
+cstdlib
+-
+cstdio
+-
+cmath
+-
+io.h
+-
 
-/home/matheus/CLionProjects/PCTFGenetico/pctfga.h
+C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.h
 iostream
 -
 

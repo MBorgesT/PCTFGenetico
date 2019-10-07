@@ -1,0 +1,45 @@
+< ---------------------------- PROBLEMA ---------------------------- >
+Instancia...........................................: AC
+Reduzida............................................: NAO
+Limite de contadores instalados.....................: 34 (30% arestas sem reducao)
+Limite de faixas cobertas...........................: 23 (10% faixas sem reducao)
+Numero de nos.......................................: 91
+Numero de arestas...................................: 114
+Numero de arestas virtuais..........................: 0
+Numero total de arestas (sem redução)...............: 114
+Numero total de faixas (sem redução)................: 232
+Numero de nos que definem os pares..................: 20
+Numero total de pares...............................: 190
+
+< --------------------------- PARAMETROS --------------------------- >
+Tamanho da população................................: 60
+Quantidade de cruzamentos por geração...............: 50
+Tamanho da elite da população.......................: 15
+Porcentagem da chance de mutação....................: 5
+N. maximo de iteracoes..............................: 1
+Tempo maximo de processamento.......................: 20.00000 segundos!
+
+< --------------------------- RESULTADOS --------------------------- >
+Tempo para encontrar a melhor solucao (BST).........: 0.00000 segundos!
+Tempo de execucao do metodo.........................: 0.00000 segundos!
+
+< ---------------------------- SOLUCAO ----------------------------- >
+Numero de postos de contagem instalados.............: 11 (max = 34)
+Numero de faixas cobertas...........................: 22 (max = 23)
+Numero de pares OD cobertos (FO)....................: 162
+
+Vetor solucao: [ 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 1 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+
+-----------------------
+>>> ARESTAS PARA INSTALACAO DOS POSTOS DE CONTAGEM:
+14149 (1)
+14267 (1)
+14565 (1)
+14634 (1)
+14687 (1)
+15018 (1)
+15344 (1)
+15901 (1)
+20458 (1)
+20481 (1)
+20483 (1)
