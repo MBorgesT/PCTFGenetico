@@ -31,6 +31,8 @@ typedef struct tSolucao {
 //---------------------------- VARIÁVEIS GLOBAIS ----------------------------
 // ----- Genetico
 Solucao *populacao;
+int tamCem;
+int tamElt;
 // ----- Dados de entrada
 int numPar_; // número de pares O-D 
 int numNos_; // número de nós na rede
@@ -59,7 +61,7 @@ int maxContReal_; // número máximo REAL de contadores (definido com base no limi
 
 //--------------------------------- MÉTODOS ---------------------------------
 // ------------ Genetico
-Solucao execGA();
+void execGA();
 
 void gerarPopulacao();
 
@@ -93,6 +95,8 @@ void lerInstancia(char *arq);
 void escreverSolucao(Solucao &s, FILE *f);
 
 void escreverResultado(Solucao &s, char *path);
+
+void escreverResumo(int* fos, double* tempos, char* path);
 
 // ------------ Auxiliares
 void montarRede();
