@@ -27,9 +27,9 @@ double INI_TMP = 2;     // temperatura inicial (INI_TMP = INI_TMP * fo da soluç
 double FRZ_TMP = 0.01;  // temperatura de congelamento
 double COO_RTE = 0.975; // taxa de resfriamento
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 600;
-int PRC_CEM = 5;
-int PRC_MUT = 3;
+int TAM_POP = 100;
+int PRC_CEM = 15;
+int PRC_MUT = 40;
 int PRC_ELT = 25;
 //==============================================================================
 
@@ -67,13 +67,13 @@ int main(int argc, char *argv[]) {
     lerInstancia(arq);
 
     strcpy(dir, "Solucoes");
-    sprintf(slv, "..\\SolucoesTesteGen\\tamPop-%i prcCem-%i prcMut-%i", TAM_POP, PRC_CEM, PRC_MUT);
+    sprintf(slv, "..\\SolucoesTesteParamEsparcos\\tamPop-%i prcCem-%i prcMut-%i", TAM_POP, PRC_CEM, PRC_MUT);
     mkdir(slv);
 
     montarRede();
 
     for (int r = 1; r <= NUM_EXE; r++) {
-        printf("\n\n>>> Resolvendo a instancia %s ALFA = %d e BETA = %d TAM_POP = %i PRC_CEM = %i PRC_MUT = %i - rodada %d\n\n",
+        printf("\n\n>>> Resolvendo a instancia %s ALFA = %d e BETA = %d TAM_POP = %i PRC_CEM = %i PRC_MUT = %i - rodada %d\n",
                INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, r);
 
         execGA();
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     }
     //-----------------------
     // imprimir resumo
-    sprintf(arq, "..\\SolucoesTesteGen\\resumo.txt");
+    sprintf(arq, "..\\SolucoesTesteParamEsparcos\\resumo.txt");
     escreverResumo(fos, tempos, arq);
     return 0;
 
