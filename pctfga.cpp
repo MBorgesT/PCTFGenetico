@@ -21,16 +21,17 @@ char INST[50] = "AC";  // arquivo com a instância (estado)
 int ALFA = 30;    // limite de contadores instalados (% do total de arestas)
 int BETA = 10;    // limite de faixas cobertas (% do total de faixas)
 int NUM_EXE = 5;     // número de execuções do método
-double MAX_TIME = 5.0;  // tempo máximo de execução (segundos)
+double MAX_TIME = 8.0;  // tempo máximo de execução (segundos)
 int MAX_ITE = 1;     // número máximo de iterações (MAX_ITE = MAX_ITE * número de arestas)
 double INI_TMP = 2;     // temperatura inicial (INI_TMP = INI_TMP * fo da solução inicial)
 double FRZ_TMP = 0.01;  // temperatura de congelamento
 double COO_RTE = 0.975; // taxa de resfriamento
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 30;
-int PRC_CEM = 20;
-int PRC_MUT = 25;
-int PRC_GUL = 100;
+int TAM_POP = 800;
+int PRC_CEM = 5;
+int PRC_MUT = 10;
+int PRC_GUL_ARE = 80;
+int PRC_GUL = 5;
 //==============================================================================
 
 
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]) {
         PRC_MUT = atoi(argv[8]);
     }
 
-    tamGul = (int) (numAre_ * ((float) PRC_GUL / 100));
+    tamGul = (int) (numAre_ * ((float) PRC_GUL_ARE / 100));
     tamCem = (int) (TAM_POP * ((float) PRC_CEM / 100));
 
     populacao = new Solucao[TAM_POP];
@@ -75,7 +76,6 @@ int main(int argc, char *argv[]) {
                INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, r);
 
         execGA();
-        if (populacao[0].numParCob == 167) printarSolucao(populacao[0]);
         fos[r - 1] = populacao[0].numParCob;
         tempos[r - 1] = bstTime_;
     }
@@ -271,42 +271,61 @@ void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
         filho.numAreCom = aux;
     }
 
-    int melhorFO, melhorId, flag = 0;
+    if (rand() % 100 < PRC_GUL){
+        gulosidade(filho);
+    }else{
+        int pos;
+        while ((filho.numConIns > maxContReal_) || (filho.numFaiCob > maxFaix_)) {
+            do
+                pos = rand() % numAre_;
+            while (filho.vetAre[pos] == 0);
+            filho.vetAre[pos] = 0;
+            filho.numConIns -= vetArestas_[pos].nCon;
+            filho.numFaiCob -= vetArestas_[pos].nFai;
+        }
+
+        calcParCob(filho);
+    }
+}
+
+void gulosidade(Solucao &s){
+    int melhorFO, melhorId, flag = 0, aux, foAnterior;
     Solucao sAux;
-    while ((filho.numConIns > maxContReal_) || (filho.numFaiCob > maxFaix_)) {
+    while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
         flag = 1;
         melhorFO = melhorId = -1;
-        for (int i = 0; i < filho.numAreCom; i++) {
-            copiarSolucao(sAux, filho);
-            sAux.vetAre[filho.vetAreIds[i]] = 0;
+        for (int i = 0; i < s.numAreCom; i++) {
+            copiarSolucao(sAux, s);
+            sAux.vetAre[s.vetAreIds[i]] = 0;
             calcParCob(sAux);
 
             if (sAux.numParCob > melhorFO) {
                 melhorFO = sAux.numParCob;
-                melhorId = filho.vetAreIds[i];
+                melhorId = s.vetAreIds[i];
             }
         }
-        filho.vetAre[melhorId] = 0;
+        s.vetAre[melhorId] = 0;
         aux = 0;
         for (int i = 0; i < numAre_; i++) {
-            if (filho.vetAre[i] == 1) {
-                filho.vetAreIds[aux] = i;
+            if (s.vetAre[i] == 1) {
+                s.vetAreIds[aux] = i;
                 aux++;
             }
         }
-        filho.numConIns -= vetArestas_[melhorId].nCon;
-        filho.numFaiCob -= vetArestas_[melhorId].nFai;
-        filho.numAreCom = aux;
-        filho.numParCob = melhorFO;
+        s.numConIns -= vetArestas_[melhorId].nCon;
+        s.numFaiCob -= vetArestas_[melhorId].nFai;
+        s.numAreCom = aux;
+        s.numParCob = melhorFO;
     }
 
-    if (flag == 0 && filho.numConIns != maxContReal_ && filho.numFaiCob != maxFaix_) {
-        while ((filho.numConIns < maxContReal_) && (filho.numFaiCob < maxFaix_)) {
+    if (flag == 0 && s.numConIns != maxContReal_ && s.numFaiCob != maxFaix_) {
+        while ((s.numConIns < maxContReal_) && (s.numFaiCob < maxFaix_)) {
             melhorFO = melhorId = -1;
             aux = rand() % (numAre_ - tamGul);
+            foAnterior = s.numParCob;
             for (int i = aux; i < aux + tamGul; i++) {
-                if (filho.vetAre[i] == 0) {
-                    copiarSolucao(sAux, filho);
+                if (s.vetAre[i] == 0) {
+                    copiarSolucao(sAux, s);
                     sAux.vetAre[i] = 1;
                     calcParCob(sAux);
 
@@ -316,37 +335,37 @@ void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
                     }
                 }
             }
-            filho.vetAre[melhorId] = 1;
+            s.vetAre[melhorId] = 1;
             aux = 0;
             for (int i = 0; i < numAre_; i++) {
-                if (filho.vetAre[i] == 1) {
-                    filho.vetAreIds[aux] = i;
+                if (s.vetAre[i] == 1) {
+                    s.vetAreIds[aux] = i;
                     aux++;
                 }
             }
-            filho.numConIns += vetArestas_[melhorId].nCon;
-            filho.numFaiCob += vetArestas_[melhorId].nFai;
-            filho.numAreCom = aux;
-            filho.numParCob = melhorFO;
+            s.numConIns += vetArestas_[melhorId].nCon;
+            s.numFaiCob += vetArestas_[melhorId].nFai;
+            s.numAreCom = aux;
+            s.numParCob = melhorFO;
         }
-        if (!(((filho.numConIns == maxContReal_) && (filho.numFaiCob <= maxFaix_)) ||
-              ((filho.numConIns <= maxContReal_) && (filho.numFaiCob == maxFaix_)))) {
+        if (!(((s.numConIns == maxContReal_) && (s.numFaiCob <= maxFaix_)) ||
+              ((s.numConIns <= maxContReal_) && (s.numFaiCob == maxFaix_)))) {
 
-            filho.vetAre[melhorId] = 0;
+            s.vetAre[melhorId] = 0;
             aux = 0;
             for (int i = 0; i < numAre_; i++) {
-                if (filho.vetAre[i] == 1) {
-                    filho.vetAreIds[aux] = i;
+                if (s.vetAre[i] == 1) {
+                    s.vetAreIds[aux] = i;
                     aux++;
                 }
             }
-            filho.numConIns -= vetArestas_[melhorId].nCon;
-            filho.numFaiCob -= vetArestas_[melhorId].nFai;
-            filho.numAreCom = aux;
-            calcParCob(filho);
+            s.numConIns -= vetArestas_[melhorId].nCon;
+            s.numFaiCob -= vetArestas_[melhorId].nFai;
+            s.numAreCom = aux;
+            s.numParCob = foAnterior;
         }
     }else{
-        calcParCob(filho);
+        calcParCob(s);
     }
 }
 

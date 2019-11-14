@@ -71,6 +71,8 @@ void crossover();
 
 void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae);
 
+void gulosidade(Solucao &s);
+
 void ordenarPopulacao();
 
 void copiarSolucao(Solucao &destino, Solucao &origem);
