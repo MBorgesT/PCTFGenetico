@@ -1,7 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/PCTFGenetico.dir/pctfga.cpp.obj"
+  "CMakeFiles/PCTFGenetico.dir/pctfga.cpp.o"
   "PCTFGenetico.exe"
-  "PCTFGenetico.exe.manifest"
   "PCTFGenetico.pdb"
   "libPCTFGenetico.dll.a"
 )

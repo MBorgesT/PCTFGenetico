@@ -1,4 +1,0 @@
-solucoes: 166  164  166
-media das solucoes: 165.33
-tempo medio: 4.46
-desvio: 0.67

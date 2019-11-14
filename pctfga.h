@@ -32,7 +32,7 @@ typedef struct tSolucao {
 // ----- Genetico
 Solucao *populacao;
 int tamCem;
-int tamElt;
+int tamGul;
 // ----- Dados de entrada
 int numPar_; // número de pares O-D 
 int numNos_; // número de nós na rede
@@ -91,6 +91,8 @@ int calcPar(Solucao &s, const int &n1);
 
 // ------------ Entrada e Saída
 void lerInstancia(char *arq);
+
+void printarSolucao(Solucao &s);
 
 void escreverSolucao(Solucao &s, FILE *f);
 

@@ -8,85 +8,85 @@
 		<Option virtualFolders="CMake Files\;"/>
 		<Build>
 			<Target title="all">
-				<Option working_dir="C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug"/>
+				<Option working_dir="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
-					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="PCTFGenetico">
-				<Option output="C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/PCTFGenetico.exe" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug"/>
-				<Option object_output="./"/>
-				<Option type="1"/>
-				<Option compiler="gcc"/>
-				<Compiler>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include/c++"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include/c++/mingw32"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include/c++/backward"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/../../../../include"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include-fixed"/>
-				</Compiler>
-				<MakeCommands>
-					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 PCTFGenetico"/>
-					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="PCTFGenetico/fast">
-				<Option output="C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/PCTFGenetico.exe" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug"/>
-				<Option object_output="./"/>
-				<Option type="1"/>
-				<Option compiler="gcc"/>
-				<Compiler>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include/c++"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include/c++/mingw32"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include/c++/backward"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/../../../../include"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include"/>
-					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/4.5.2/include-fixed"/>
-				</Compiler>
-				<MakeCommands>
-					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 PCTFGenetico/fast"/>
-					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="edit_cache">
-				<Option working_dir="C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug"/>
-				<Option type="4"/>
-				<MakeCommands>
-					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
-					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="rebuild_cache">
-				<Option working_dir="C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug"/>
+				<Option working_dir="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
-					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/Matheus/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="PCTFGenetico">
+				<Option output="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/PCTFGenetico.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/x86_64-pc-cygwin"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/../../../../lib/../include/w32api"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 PCTFGenetico"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="PCTFGenetico/fast">
+				<Option output="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/PCTFGenetico.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/x86_64-pc-cygwin"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include/c++/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-cygwin/7.4.0/../../../../lib/../include/w32api"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 PCTFGenetico/fast"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -j8 -f &quot;/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.cpp">
+		<Unit filename="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/pctfga.cpp">
 			<Option target="PCTFGenetico"/>
 		</Unit>
-		<Unit filename="C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.h">
+		<Unit filename="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/pctfga.h">
 			<Option target="PCTFGenetico"/>
 		</Unit>
-		<Unit filename="C:/Users/Matheus/CLionProjects/PCTFGenetico/CMakeLists.txt">
+		<Unit filename="/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
 	</Project>

@@ -6,11 +6,9 @@
 
 #IncludeRegexTransform: 
 
-C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.cpp
+/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/pctfga.cpp
 pctfga.h
-C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.h
-conio.h
--
+/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/pctfga.h
 time.h
 -
 omp.h
@@ -25,8 +23,10 @@ cmath
 -
 io.h
 -
+sys/stat.h
+-
 
-C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.h
+/cygdrive/c/Users/mbt55/CLionProjects/PCTFGenetico/pctfga.h
 iostream
 -
 

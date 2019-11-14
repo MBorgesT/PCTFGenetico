@@ -1,6 +1,5 @@
 #include "pctfga.h"
 
-#include <conio.h>
 #include <time.h>
 #include <omp.h>
 #include <cstring>
@@ -8,6 +7,7 @@
 #include <cstdio>
 #include <cmath>
 #include <io.h>
+#include <sys/stat.h>
 
 #define DBG // habilita o modo DEBUG (exibe na tela as melhoras na FO)
 #define RND // habilita múltiplas (NUM_EXE) execuções com sementes aleatórias para a instância
@@ -27,17 +27,16 @@ double INI_TMP = 2;     // temperatura inicial (INI_TMP = INI_TMP * fo da soluç
 double FRZ_TMP = 0.01;  // temperatura de congelamento
 double COO_RTE = 0.975; // taxa de resfriamento
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 100;
-int PRC_CEM = 15;
-int PRC_MUT = 40;
-int PRC_ELT = 25;
+int TAM_POP = 30;
+int PRC_CEM = 20;
+int PRC_MUT = 25;
+int PRC_GUL = 100;
 //==============================================================================
 
 
 //================================== PRINCIPAL =================================
 int main(int argc, char *argv[]) {
     FILE *f;
-    Solucao sol;
     char arq[50], dir[50], slv[50];
     int fos[NUM_EXE];
     double tempos[NUM_EXE];
@@ -59,16 +58,15 @@ int main(int argc, char *argv[]) {
         PRC_MUT = atoi(argv[8]);
     }
 
+    tamGul = (int) (numAre_ * ((float) PRC_GUL / 100));
     tamCem = (int) (TAM_POP * ((float) PRC_CEM / 100));
-    tamElt = (int) (TAM_POP * ((float) PRC_ELT / 100));
 
     populacao = new Solucao[TAM_POP];
     sprintf(arq, "..\\Instancias\\%s.txt", INST);
     lerInstancia(arq);
 
     strcpy(dir, "Solucoes");
-    sprintf(slv, "..\\SolucoesTesteParamEsparcos\\tamPop-%i prcCem-%i prcMut-%i", TAM_POP, PRC_CEM, PRC_MUT);
-    mkdir(slv);
+    sprintf(slv, "..\\SolucoesTesteCalibragem\\tamPop-%i prcCem-%i prcMut-%i", TAM_POP, PRC_CEM, PRC_MUT);
 
     montarRede();
 
@@ -77,78 +75,18 @@ int main(int argc, char *argv[]) {
                INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, r);
 
         execGA();
-
-        copiarSolucao(sol, populacao[0]);
-        fos[r-1] = sol.numParCob;
-        tempos[r-1] = bstTime_;
+        if (populacao[0].numParCob == 167) printarSolucao(populacao[0]);
+        fos[r - 1] = populacao[0].numParCob;
+        tempos[r - 1] = bstTime_;
     }
     //-----------------------
     // imprimir resumo
-    sprintf(arq, "..\\SolucoesTesteParamEsparcos\\resumo.txt");
+    sprintf(arq, "..\\SolucoesTesteGulosidade\\resumo.txt");
+
     escreverResumo(fos, tempos, arq);
     return 0;
 
-    /*
-    //-----------------------
-    // dados de entrada
-    tamCem = (int) (TAM_POP * ((float) PRC_CEM / 100));
-    populacao = new Solucao[TAM_POP];
 
-    sprintf(arq, "..\\Instancias\\%s.txt", INST);
-    strcpy(dir, "Solucoes");
-    sprintf(slv, "..\\SolucoesTesteGen\\tamPop-%i prcCem-%i prcMut-%i prcElt-%i", TAM_POP, PRC_CEM, PRC_MUT);
-    mkdir(slv);
-    lerInstancia(arq);
-    montarRede();
-    //testEntRede();
-    //-----------------------
-    // executar o SA
-    bstSol = 0;
-    solMed = medSolAva = temMed = desvio = 0.0;
-    for (int r = 1; r <= NUM_EXE; r++) {
-        printf("\n\n>>> Resolvendo a instancia %s ALFA = %d e BETA = %d TAM_POP = %i PRC_CEM = %i PRC_MUT = %i - rodada %d\n\n",
-               INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, r);
-        execGA();
-        sol = populacao[0];
-        fos[r-1] = sol.numParCob;
-        tempos[r-1] = bstTime_;
-        sprintf(arq, "%s\\sol-%s-%da-%db-%d.txt", slv, INST, ALFA, BETA, r);
-        escreverResultado(sol, arq);
-        if (sol.numParCob > bstSol) {
-            sprintf(arq, "%s\\bstSol-%s-%da-%db.txt", slv, INST, ALFA, BETA);
-            escreverResultado(sol, arq);
-            bstSol = sol.numParCob;
-        }
-        solMed += sol.numParCob;
-        temMed += bstTime_;
-        f = fopen("saida-full.txt", "at");
-        fprintf(f, "%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\t%d\t%d\t%d\t%.2f\t\t%.2f\n",
-                INST, ALFA, BETA, numNos_, numAre_, numTotAre_, numTotFai_, numPar_, solAva_, sol.numConIns,
-                sol.numFaiCob, sol.numParCob, bstTime_, excTime_);
-        fclose(f);
-    }
-    //-----------------------
-    // calcular as médias
-    solMed = solMed / (double) NUM_EXE;
-    medSolAva = medSolAva / (double) NUM_EXE;
-    temMed = temMed / (double) NUM_EXE;
-    desvio = ((bstSol - solMed) / bstSol) * 100;
-    f = fopen("saida.txt", "at");
-    fprintf(f, "%s\t%d\t%d\t%d\t%.2f\t%.2f\t%.2f\t%.2f\n", INST, ALFA, BETA, bstSol, solMed, desvio, temMed, medSolAva);
-    fclose(f);
-    //-----------------------
-    // imprimir resumo
-    sprintf(arq, "..\\SolucoesTesteGen\\resumo.txt");
-    escreverResumo(fos, tempos, arq);
-    //-----------------------
-    // limpar memória
-    limparMemoria();
-    if (argc == 1) {
-        printf("\n\n>>> Pressione ENTER para encerrar: ");
-        _getch();
-    }
-    return 0;
-    */
 }
 //==============================================================================
 //==================================== GA ======================================
@@ -280,7 +218,7 @@ void heuAleGA(Solucao &s) {
     s.vetAre[aux] = 0;
     s.numConIns -= vetArestas_[aux].nCon;
     s.numFaiCob -= vetArestas_[aux].nFai;
-    s.numAreCom = i;
+    s.numAreCom = i - 1;
 
     calcParCob(s);
 }
@@ -288,15 +226,18 @@ void heuAleGA(Solucao &s) {
 void crossover() {
     int a, b;
     for (int i = TAM_POP - tamCem; i < TAM_POP; i++) {
-        a = rand() % (TAM_POP - tamCem);
-        b = rand() % (TAM_POP - tamCem);
+        do {
+            a = rand() % (TAM_POP - tamCem);
+            b = rand() % (TAM_POP - tamCem);
+        } while (a == b);
         gerarFilho(populacao[i], populacao[a], populacao[b]);
     }
+
 }
 
 void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
-    int aux = (rand() % ((pai.numAreCom + mae.numAreCom) / 2) - 1) +
-              1;  // possivel problema com array out of limits na hora de puxar
+    int aux = (rand() % ((pai.numAreCom + mae.numAreCom) / 2) - 1) + 1;
+    // possivel problema com array out of limits na hora de puxar
 
     memset(filho.vetAre, 0, sizeof(filho.vetAre));
     filho.numConIns = filho.numFaiCob = 0;
@@ -319,19 +260,94 @@ void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
 
     if (rand() % 100 < PRC_MUT) {
         gerVizinho(filho);
+
+        aux = 0;
+        for (int i = 0; i < numAre_; i++) {
+            if (filho.vetAre[i] == 1) {
+                filho.vetAreIds[aux] = i;
+                aux++;
+            }
+        }
+        filho.numAreCom = aux;
     }
 
-    int pos;
+    int melhorFO, melhorId, flag = 0;
+    Solucao sAux;
     while ((filho.numConIns > maxContReal_) || (filho.numFaiCob > maxFaix_)) {
-        do
-            pos = rand() % numAre_;
-        while (filho.vetAre[pos] == 0);
-        filho.vetAre[pos] = 0;
-        filho.numConIns -= vetArestas_[pos].nCon;
-        filho.numFaiCob -= vetArestas_[pos].nFai;
+        flag = 1;
+        melhorFO = melhorId = -1;
+        for (int i = 0; i < filho.numAreCom; i++) {
+            copiarSolucao(sAux, filho);
+            sAux.vetAre[filho.vetAreIds[i]] = 0;
+            calcParCob(sAux);
+
+            if (sAux.numParCob > melhorFO) {
+                melhorFO = sAux.numParCob;
+                melhorId = filho.vetAreIds[i];
+            }
+        }
+        filho.vetAre[melhorId] = 0;
+        aux = 0;
+        for (int i = 0; i < numAre_; i++) {
+            if (filho.vetAre[i] == 1) {
+                filho.vetAreIds[aux] = i;
+                aux++;
+            }
+        }
+        filho.numConIns -= vetArestas_[melhorId].nCon;
+        filho.numFaiCob -= vetArestas_[melhorId].nFai;
+        filho.numAreCom = aux;
+        filho.numParCob = melhorFO;
     }
 
-    calcParCob(filho);
+    if (flag == 0 && filho.numConIns != maxContReal_ && filho.numFaiCob != maxFaix_) {
+        while ((filho.numConIns < maxContReal_) && (filho.numFaiCob < maxFaix_)) {
+            melhorFO = melhorId = -1;
+            aux = rand() % (numAre_ - tamGul);
+            for (int i = aux; i < aux + tamGul; i++) {
+                if (filho.vetAre[i] == 0) {
+                    copiarSolucao(sAux, filho);
+                    sAux.vetAre[i] = 1;
+                    calcParCob(sAux);
+
+                    if (sAux.numParCob > melhorFO) {
+                        melhorFO = sAux.numParCob;
+                        melhorId = i;
+                    }
+                }
+            }
+            filho.vetAre[melhorId] = 1;
+            aux = 0;
+            for (int i = 0; i < numAre_; i++) {
+                if (filho.vetAre[i] == 1) {
+                    filho.vetAreIds[aux] = i;
+                    aux++;
+                }
+            }
+            filho.numConIns += vetArestas_[melhorId].nCon;
+            filho.numFaiCob += vetArestas_[melhorId].nFai;
+            filho.numAreCom = aux;
+            filho.numParCob = melhorFO;
+        }
+        if (!(((filho.numConIns == maxContReal_) && (filho.numFaiCob <= maxFaix_)) ||
+              ((filho.numConIns <= maxContReal_) && (filho.numFaiCob == maxFaix_)))) {
+
+            filho.vetAre[melhorId] = 0;
+            aux = 0;
+            for (int i = 0; i < numAre_; i++) {
+                if (filho.vetAre[i] == 1) {
+                    filho.vetAreIds[aux] = i;
+                    aux++;
+                }
+            }
+            filho.numConIns -= vetArestas_[melhorId].nCon;
+            filho.numFaiCob -= vetArestas_[melhorId].nFai;
+            filho.numAreCom = aux;
+            calcParCob(filho);
+        }
+    }else{
+        calcParCob(filho);
+    }
 }
 
 void ordenarPopulacao() {
@@ -609,6 +625,21 @@ void lerInstancia(char *arq) {
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
+void printarSolucao(Solucao &s) {
+    printf("\n< ---------------------------- SOLUCAO ----------------------------- >\n");
+    printf("Numero de postos de contagem instalados.............: %d (max = %d)\n", s.numConIns, maxCont_);
+    printf("Numero de faixas cobertas...........................: %d (max = %d)\n", s.numFaiCob, maxFaix_);
+    printf("Numero de pares OD cobertos (FO)....................: %d\n", s.numParCob);
+    printf("\nVetor solucao: [ ");
+    for (int i = 0; i < numAre_; i++)
+        printf("%d ", s.vetAre[i]);
+    printf("]\n\n");
+    printf("-----------------------\n>>> ARESTAS PARA INSTALACAO DOS POSTOS DE CONTAGEM:\n");
+    for (int i = 0; i < numAre_; i++)
+        if (s.vetAre[i] == 1)
+            printf("%d (%d)\n", vetArestas_[i].id, vetArestas_[i].nCon);
+}
+
 void escreverSolucao(Solucao &s, FILE *f) {
     if (f == NULL)
         f = stdout;
@@ -662,7 +693,7 @@ void escreverResumo(int *fos, double *tempos, char *path) {
     for (int i = 0; i < NUM_EXE; i++) fprintf(f, "%.3f\t", tempos[i]);
 
     float medValores = 0, medTempos = 0;
-    for (int i = 0; i < NUM_EXE; i++){
+    for (int i = 0; i < NUM_EXE; i++) {
         medValores += fos[i];
         medTempos += tempos[i];
     }
