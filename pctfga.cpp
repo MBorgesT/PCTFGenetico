@@ -27,11 +27,14 @@ double INI_TMP = 2;     // temperatura inicial (INI_TMP = INI_TMP * fo da soluç
 double FRZ_TMP = 0.01;  // temperatura de congelamento
 double COO_RTE = 0.975; // taxa de resfriamento
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 700;
-int PRC_CEM = 10;
-int PRC_MUT = 20;
-int PRC_ARE = 100;
-int PRC_GUL = 100;
+int TAM_POP = 400;
+int PRC_CEM = 20;
+int PRC_MUT = 5;
+int PRC_ARE = 10;
+int PRC_GUL = 10;
+
+int QTD_POP = 4;
+int QTD_MGR = 12;
 //==============================================================================
 
 
@@ -64,7 +67,9 @@ int main(int argc, char *argv[]) {
     tamGul = (int) (numAre_ * ((float) PRC_ARE / 100));
     tamCem = (int) (TAM_POP * ((float) PRC_CEM / 100));
 
-    populacao = new Solucao[TAM_POP];
+    for (int i = 0; i < QTD_POP; i++)
+        populacao[i] = new Solucao[TAM_POP];
+
     sprintf(arq, "..\\Instancias\\%s.txt", INST);
     lerInstancia(arq);
 
@@ -78,12 +83,12 @@ int main(int argc, char *argv[]) {
                INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, PRC_ARE, PRC_GUL, r);
 
         execGA();
-        fos[r - 1] = populacao[0].numParCob;
+        fos[r - 1] = bstFo_;
         tempos[r - 1] = bstTime_;
     }
     //-----------------------
     // imprimir resumo
-    sprintf(arq, "..\\SolucoesTesteGulosidade\\resumo.txt");
+    if (argc > 1) sprintf(arq, "..\\SolucoesTesteMultiPop\\resumo.txt");
 
     escreverResumo(fos, tempos, arq);
     return 0;
@@ -94,56 +99,116 @@ int main(int argc, char *argv[]) {
 //==================================== GA ======================================
 
 void execGA() {
-    int melhorFO, flag, aux, qtdGen = 0, qtdEpi = 0;
+    int melhorFO[QTD_POP], flag, aux, qtdGen = 0, qtdEpi = 0;
+    double melhorTempo[QTD_POP];
 
-    gerarPopulacao();
     //---- ordena a população toda, o que não é necessário depois
-    Solucao escolhido;
-    int j;
 
-    for (int i = 1; i < TAM_POP; i++) {
-        copiarSolucao(escolhido, populacao[i]);
-        j = i - 1;
-
-        while ((j >= 0) && (populacao[j].numParCob < escolhido.numParCob)) {
-            copiarSolucao(populacao[j + 1], populacao[j]);
-            j--;
-        }
-
-        copiarSolucao(populacao[j + 1], escolhido);
+    for (int i = 0; i < QTD_POP; i++){
+        gerarPopulacao(i);
+        ordenarPopulacaoInteira(i);
+        melhorFO[i] = populacao[i][0].numParCob;
     }
     //----
 
-    melhorFO = populacao[0].numParCob;
+    clock_t h1, h2, h3, h4;
+    h1 = clock();
+    h2 = clock();
+
+    while (((double) ((h2 - h1)) / CLOCKS_PER_SEC) < MAX_TIME) {
+
+        h3 = clock();
+        h4 = clock();
+        while (((double) ((h4 - h3)) / CLOCKS_PER_SEC) < (MAX_TIME/QTD_MGR)) {
+#pragma omp parallel for
+            for (int i = 0; i < QTD_POP; i++) {
+                crossover(i);
+                ordenarPopulacao(i);
+
+                aux = populacao[i][0].numParCob;
+                flag = 1;
+                for (int j = 1; j < TAM_POP - tamCem; j++) {
+                    if (populacao[i][j].numParCob != aux) {
+                        flag = 0;
+                        break;
+                    }
+                }
+                if (flag == 1) {
+                    epidemia(i);
+                    qtdEpi++;
+                }
+
+                if (populacao[i][0].numParCob > melhorFO[i]) {
+                    melhorFO[i] = populacao[i][0].numParCob;
+                    melhorTempo[i] = (clock() - h1) / (float) CLOCKS_PER_SEC;
+                }
+            }
+            h4 = clock();
+        }
+
+        for (int i = 0; i < QTD_POP; i++){
+            for (int j = 0; j < tamCem; j++){
+                copiarSolucao(populacao[i][j], populacao[(i+1) % QTD_POP][TAM_POP-(j+1)]);
+            }
+        }
+
+        for (int i = 0; i < QTD_POP; i++)
+            ordenarPopulacao(i);
+
+        h2 = clock();
+    }
+
+    bstFo_ = -1;
+    for (int i = 0; i < QTD_POP; i++){
+        if (melhorFO[i] > bstFo_){
+            bstFo_ = melhorFO[i];
+            bstTime_ = melhorTempo[i];
+        }else if (melhorFO[i] == bstFo_ && melhorTempo[i] < bstTime_){
+            bstTime_ = melhorTempo[i];
+        }
+    }
+
+    printf("bstSol: %i\tbstTempo: %.4f\tqtd gen: %i\tqtd epi: %i\tdiv: %.5f\n", bstFo_, bstTime_,
+           qtdGen, qtdEpi, (float) qtdEpi / (float) qtdGen);
+}
+
+void testarTempoGA(int n){
+    int melhorFO, flag, aux, qtdGen = 0, qtdEpi = 0;
+
+    gerarPopulacao(0);
+    //---- ordena a população toda, o que não é necessário depois
+    ordenarPopulacaoInteira(n);
+    //----
+
+    melhorFO = populacao[0][0].numParCob;
 
     clock_t h1, h2;
     h1 = clock();
     h2 = clock();
 
     //---- teste de tempo
-    /*
     clock_t h3;
     double cross, ord, epi, total;
 
     h3 = clock();
-    crossover();
+    crossover(n);
     cross = (clock() - h3) / (float) CLOCKS_PER_SEC;
 
     h3 = clock();
-    ordenarPopulacao();
+    ordenarPopulacao(n);
     ord = (clock() - h3) / (float) CLOCKS_PER_SEC;
 
     h3 = clock();
-    aux = populacao[0].numParCob;
+    aux = populacao[0][0].numParCob;
     flag = 1;
     for (int i = 1; i < TAM_POP - tamCem; i++) {
-        if (populacao[i].numParCob != aux) {
+        if (populacao[0][i].numParCob != aux) {
             flag = 0;
             break;
         }
     }
     if (flag == 1) {
-        epidemia();
+        epidemia(n);
         qtdEpi++;
     }
     epi = (clock() - h3) / (float) CLOCKS_PER_SEC;
@@ -155,49 +220,19 @@ void execGA() {
             (double)epi/(double)total);
 
 
-    if (populacao[0].numParCob > melhorFO) {
-        melhorFO = populacao[0].numParCob;
+    if (populacao[0][0].numParCob > melhorFO) {
+        melhorFO = populacao[0][0].numParCob;
         bstTime_ = (clock() - h1) / (float) CLOCKS_PER_SEC;
     }
 
     h2 = clock();
     qtdGen++;
-    */
     //----
-
-    while (((double) ((h2 - h1)) / CLOCKS_PER_SEC) < MAX_TIME) {
-        crossover();
-        ordenarPopulacao();
-
-        aux = populacao[0].numParCob;
-        flag = 1;
-        for (int i = 1; i < TAM_POP - tamCem; i++) {
-            if (populacao[i].numParCob != aux) {
-                flag = 0;
-                break;
-            }
-        }
-        if (flag == 1) {
-            epidemia();
-            qtdEpi++;
-        }
-
-        if (populacao[0].numParCob > melhorFO) {
-            melhorFO = populacao[0].numParCob;
-            bstTime_ = (clock() - h1) / (float) CLOCKS_PER_SEC;
-        }
-
-        h2 = clock();
-        qtdGen++;
-    }
-
-    printf("bstSol: %i\tbstTempo: %.4f\tqtd gen: %i\tqtd epi: %i\tdiv: %.5f\n", populacao[0].numParCob, bstTime_,
-           qtdGen, qtdEpi, (float) qtdEpi / (float) qtdGen);
 }
 
-void gerarPopulacao() {
+void gerarPopulacao(int n) {
     for (int i = 0; i < TAM_POP; i++) {
-        heuAleGA(populacao[i]);
+        heuAleGA(populacao[n][i]);
     }
 }
 
@@ -223,10 +258,9 @@ void heuAleGA(Solucao &s) {
     calcParCob(s);
 }
 
-void crossover() {
-#pragma omp parallel for
+void crossover(int n) {
     for (int i = TAM_POP - tamCem; i < TAM_POP; i++) {
-        gerarFilho(populacao[i], populacao[rand() % (TAM_POP - tamCem)], populacao[rand() % (TAM_POP - tamCem)]);
+        gerarFilho(populacao[n][i], populacao[n][rand() % (TAM_POP - tamCem)], populacao[n][rand() % (TAM_POP - tamCem)]);
     }
 }
 
@@ -365,20 +399,37 @@ void gulosidade(Solucao &s) {
     }
 }
 
-void ordenarPopulacao() {
+void ordenarPopulacaoInteira(int n){
+    Solucao escolhido;
+    int j;
+
+    for (int i = 1; i < TAM_POP; i++) {
+        copiarSolucao(escolhido, populacao[n][i]);
+        j = i - 1;
+
+        while ((j >= 0) && (populacao[n][j].numParCob < escolhido.numParCob)) {
+            copiarSolucao(populacao[n][j + 1], populacao[n][j]);
+            j--;
+        }
+
+        copiarSolucao(populacao[n][j + 1], escolhido);
+    }
+}
+
+void ordenarPopulacao(int n) {
     Solucao escolhido;
     int j;
 
     for (int i = TAM_POP - tamCem; i < TAM_POP; i++) {
-        copiarSolucao(escolhido, populacao[i]);
+        copiarSolucao(escolhido, populacao[n][i]);
         j = i - 1;
 
-        while ((j >= 0) && (populacao[j].numParCob < escolhido.numParCob)) {
-            copiarSolucao(populacao[j + 1], populacao[j]);
+        while ((j >= 0) && (populacao[n][j].numParCob < escolhido.numParCob)) {
+            copiarSolucao(populacao[n][j + 1], populacao[n][j]);
             j--;
         }
 
-        copiarSolucao(populacao[j + 1], escolhido);
+        copiarSolucao(populacao[n][j + 1], escolhido);
     }
 }
 
@@ -386,25 +437,25 @@ void copiarSolucao(Solucao &destino, Solucao &origem) {
     memcpy(&destino, &origem, sizeof(origem));
 }
 
-void epidemia() {
+void epidemia(int n) {
     Solucao melhor;
-    copiarSolucao(melhor, populacao[0]);
+    copiarSolucao(melhor, populacao[n][0]);
 
-    gerarPopulacao();
-    copiarSolucao(populacao[0], melhor);
+    gerarPopulacao(n);
+    copiarSolucao(populacao[n][0], melhor);
     //---- ordena a população toda, o que não é necessário depois
     int j;
     Solucao escolhido;
     for (int i = 1; i < TAM_POP; i++) {
-        copiarSolucao(escolhido, populacao[i]);
+        copiarSolucao(escolhido, populacao[n][i]);
         j = i - 1;
 
-        while ((j >= 0) && (populacao[j].numParCob < escolhido.numParCob)) {
-            copiarSolucao(populacao[j + 1], populacao[j]);
+        while ((j >= 0) && (populacao[n][j].numParCob < escolhido.numParCob)) {
+            copiarSolucao(populacao[n][j + 1], populacao[n][j]);
             j--;
         }
 
-        copiarSolucao(populacao[j + 1], escolhido);
+        copiarSolucao(populacao[n][j + 1], escolhido);
     }
     //----
 }

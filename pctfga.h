@@ -30,10 +30,9 @@ typedef struct tSolucao {
 
 //---------------------------- VARIÁVEIS GLOBAIS ----------------------------
 // ----- Genetico
-Solucao *populacao;
+Solucao *populacao[4];
 int tamCem;
 int tamGul;
-int tamElt;
 // ----- Dados de entrada
 int numPar_; // número de pares O-D 
 int numNos_; // número de nós na rede
@@ -49,7 +48,7 @@ int *vetQtdAdj_;  // vetor com a quantidade de nós (e arestas) adjacentes a cada
 int **matNosAdj_; // matriz com os nós adjacentes a cada nó
 int **matAreAdj_; // matriz com as arestas adjacentes a cada nó
 // ----- Resultados
-int foIni_, foFin_;        // função objetivo das soluções inicial e final
+int foIni_, foFin_, bstFo_;        // função objetivo das soluções inicial e final
 double bstTime_, excTime_; // tempo para encontrar a melhor solução e tempo total
 int solAva_;              // número de soluções avaliadas pelo CS
 // ----- Variáveis auxiliares
@@ -64,21 +63,25 @@ int maxContReal_; // número máximo REAL de contadores (definido com base no limi
 // ------------ Genetico
 void execGA();
 
-void gerarPopulacao();
+void testarTempoGA(int n);
+
+void gerarPopulacao(int n);
 
 void heuAleGA(Solucao &s);
 
-void crossover();
+void crossover(int n);
 
 void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae);
 
 void gulosidade(Solucao &s);
 
-void ordenarPopulacao();
+void ordenarPopulacaoInteira(int n);
+
+void ordenarPopulacao(int n);
 
 void copiarSolucao(Solucao &destino, Solucao &origem);
 
-void epidemia();
+void epidemia(int n);
 
 // ------------ SA
 void execSA(Solucao &s);
