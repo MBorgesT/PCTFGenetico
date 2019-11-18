@@ -33,6 +33,7 @@ typedef struct tSolucao {
 Solucao *populacao;
 int tamCem;
 int tamGul;
+int tamElt;
 // ----- Dados de entrada
 int numPar_; // número de pares O-D 
 int numNos_; // número de nós na rede

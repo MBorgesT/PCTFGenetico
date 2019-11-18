@@ -27,11 +27,12 @@ double INI_TMP = 2;     // temperatura inicial (INI_TMP = INI_TMP * fo da soluç
 double FRZ_TMP = 0.01;  // temperatura de congelamento
 double COO_RTE = 0.975; // taxa de resfriamento
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 800;
-int PRC_CEM = 5;
-int PRC_MUT = 10;
-int PRC_GUL_ARE = 80;
-int PRC_GUL = 5;
+int TAM_POP = 600;
+int PRC_CEM = 4;
+int PRC_MUT = 8;
+int PRC_ELT = 20;
+int PRC_GUL_ARE = 100;
+int PRC_GUL = 30;
 //==============================================================================
 
 
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]) {
 
     tamGul = (int) (numAre_ * ((float) PRC_GUL_ARE / 100));
     tamCem = (int) (TAM_POP * ((float) PRC_CEM / 100));
+    tamElt = (int) (TAM_POP * (1 - ((float) PRC_ELT / 100)));
 
     populacao = new Solucao[TAM_POP];
     sprintf(arq, "..\\Instancias\\%s.txt", INST);
@@ -127,9 +129,6 @@ void execGA() {
     crossover();
     cross = (clock() - h3) / (float) CLOCKS_PER_SEC;
 
-
-    for (int i = 0; i < TAM_POP; i++) printf("%i: %i\n", i, populacao[i].numParCob);
-
     h3 = clock();
     ordenarPopulacao();
     ord = (clock() - h3) / (float) CLOCKS_PER_SEC;
@@ -152,7 +151,9 @@ void execGA() {
     h3 = clock();
     total = (h3 - h1) / (float) CLOCKS_PER_SEC;
 
-    printf("cross: %.6f\tord: %.6f\tepi: %.6f\n", cross/total, ord/total, epi/total);
+    printf("cross: %.6f\tord: %.6f\tepi: %.6f\n", (double)cross/(double)total, (double)ord/(double)total,
+            (double)epi/(double)total);
+
     for (int i = 0; i < TAM_POP; i++) printf("%i: %i\n", i, populacao[i].numParCob);
 
     if (populacao[0].numParCob > melhorFO) {
@@ -226,11 +227,9 @@ void heuAleGA(Solucao &s) {
 void crossover() {
     int a, b;
     for (int i = TAM_POP - tamCem; i < TAM_POP; i++) {
-        do {
-            a = rand() % (TAM_POP - tamCem);
-            b = rand() % (TAM_POP - tamCem);
-        } while (a == b);
-        gerarFilho(populacao[i], populacao[a], populacao[b]);
+        a = rand() % (TAM_POP - tamCem);
+        b = rand() % (TAM_POP - tamElt);
+        (rand() % 2) ? gerarFilho(populacao[i], populacao[a], populacao[b]) : gerarFilho(populacao[i], populacao[b], populacao[a]);
     }
 
 }
@@ -271,9 +270,9 @@ void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
         filho.numAreCom = aux;
     }
 
-    if (rand() % 100 < PRC_GUL){
+    if (rand() % 100 < PRC_GUL) {
         gulosidade(filho);
-    }else{
+    } else {
         int pos;
         while ((filho.numConIns > maxContReal_) || (filho.numFaiCob > maxFaix_)) {
             do
@@ -288,21 +287,21 @@ void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
     }
 }
 
-void gulosidade(Solucao &s){
-    int melhorFO, melhorId, flag = 0, aux, foAnterior;
-    Solucao sAux;
+void gulosidade(Solucao &s) {
+    int melhorFO, melhorId, flag = 0, aux, aux2, foAnterior;
     while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
         flag = 1;
         melhorFO = melhorId = -1;
         for (int i = 0; i < s.numAreCom; i++) {
-            copiarSolucao(sAux, s);
-            sAux.vetAre[s.vetAreIds[i]] = 0;
-            calcParCob(sAux);
-
-            if (sAux.numParCob > melhorFO) {
-                melhorFO = sAux.numParCob;
+            aux2 = s.numParCob;
+            s.vetAre[s.vetAreIds[i]] = 0;
+            calcParCob(s);
+            if (s.numParCob > melhorFO) {
+                melhorFO = s.numParCob;
                 melhorId = s.vetAreIds[i];
             }
+            s.vetAre[s.vetAreIds[i]] = 1;
+            s.numParCob = aux2;
         }
         s.vetAre[melhorId] = 0;
         aux = 0;
@@ -325,14 +324,15 @@ void gulosidade(Solucao &s){
             foAnterior = s.numParCob;
             for (int i = aux; i < aux + tamGul; i++) {
                 if (s.vetAre[i] == 0) {
-                    copiarSolucao(sAux, s);
-                    sAux.vetAre[i] = 1;
-                    calcParCob(sAux);
-
-                    if (sAux.numParCob > melhorFO) {
-                        melhorFO = sAux.numParCob;
+                    aux2 = s.numParCob;
+                    s.vetAre[i] = 1;
+                    calcParCob(s);
+                    if (s.numParCob > melhorFO) {
+                        melhorFO = s.numParCob;
                         melhorId = i;
                     }
+                    s.vetAre[i] = 0;
+                    s.numParCob = aux2;
                 }
             }
             s.vetAre[melhorId] = 1;
@@ -364,7 +364,7 @@ void gulosidade(Solucao &s){
             s.numAreCom = aux;
             s.numParCob = foAnterior;
         }
-    }else{
+    } else {
         calcParCob(s);
     }
 }

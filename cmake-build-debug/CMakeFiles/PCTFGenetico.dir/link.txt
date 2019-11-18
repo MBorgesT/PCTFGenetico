@@ -1,1 +1,1 @@
-/usr/bin/c++.exe  -static-libstdc++ -static-libgcc -fopenmp -g  -Wl,--enable-auto-import CMakeFiles/PCTFGenetico.dir/pctfga.cpp.o  -o PCTFGenetico.exe -Wl,--out-implib,libPCTFGenetico.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
+/usr/bin/c++.exe  -static-libstdc++ -static-libgcc -fopenmp -fopenmp -g  -Wl,--enable-auto-import  CMakeFiles/PCTFGenetico.dir/pctfga.cpp.o  -o PCTFGenetico.exe -Wl,--out-implib,libPCTFGenetico.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
