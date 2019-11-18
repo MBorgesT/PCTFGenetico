@@ -21,18 +21,17 @@ char INST[50] = "AC";  // arquivo com a instância (estado)
 int ALFA = 30;    // limite de contadores instalados (% do total de arestas)
 int BETA = 10;    // limite de faixas cobertas (% do total de faixas)
 int NUM_EXE = 5;     // número de execuções do método
-double MAX_TIME = 8.0;  // tempo máximo de execução (segundos)
+double MAX_TIME = 6.0;  // tempo máximo de execução (segundos)
 int MAX_ITE = 1;     // número máximo de iterações (MAX_ITE = MAX_ITE * número de arestas)
 double INI_TMP = 2;     // temperatura inicial (INI_TMP = INI_TMP * fo da solução inicial)
 double FRZ_TMP = 0.01;  // temperatura de congelamento
 double COO_RTE = 0.975; // taxa de resfriamento
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 600;
-int PRC_CEM = 4;
-int PRC_MUT = 8;
-int PRC_ELT = 20;
-int PRC_GUL_ARE = 100;
-int PRC_GUL = 30;
+int TAM_POP = 700;
+int PRC_CEM = 10;
+int PRC_MUT = 20;
+int PRC_ARE = 100;
+int PRC_GUL = 100;
 //==============================================================================
 
 
@@ -58,11 +57,12 @@ int main(int argc, char *argv[]) {
         TAM_POP = atoi(argv[6]);
         PRC_CEM = atoi(argv[7]);
         PRC_MUT = atoi(argv[8]);
+        PRC_ARE = atoi(argv[9]);
+        PRC_GUL = atoi(argv[10]);
     }
 
-    tamGul = (int) (numAre_ * ((float) PRC_GUL_ARE / 100));
+    tamGul = (int) (numAre_ * ((float) PRC_ARE / 100));
     tamCem = (int) (TAM_POP * ((float) PRC_CEM / 100));
-    tamElt = (int) (TAM_POP * (1 - ((float) PRC_ELT / 100)));
 
     populacao = new Solucao[TAM_POP];
     sprintf(arq, "..\\Instancias\\%s.txt", INST);
@@ -74,8 +74,8 @@ int main(int argc, char *argv[]) {
     montarRede();
 
     for (int r = 1; r <= NUM_EXE; r++) {
-        printf("\n\n>>> Resolvendo a instancia %s ALFA = %d e BETA = %d TAM_POP = %i PRC_CEM = %i PRC_MUT = %i - rodada %d\n",
-               INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, r);
+        printf("\n\n>>> Resolvendo a instancia %s ALFA = %d e BETA = %d TAM_POP = %i PRC_CEM = %i PRC_MUT = %i PRC_ARE = %i PRC_GUL = %i - rodada %d\n",
+               INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, PRC_ARE, PRC_GUL, r);
 
         execGA();
         fos[r - 1] = populacao[0].numParCob;
@@ -151,10 +151,9 @@ void execGA() {
     h3 = clock();
     total = (h3 - h1) / (float) CLOCKS_PER_SEC;
 
-    printf("cross: %.6f\tord: %.6f\tepi: %.6f\n", (double)cross/(double)total, (double)ord/(double)total,
+    printf("cross: %.2f\tord: %.2f\tepi: %.2f\n", (double)cross/(double)total, (double)ord/(double)total,
             (double)epi/(double)total);
 
-    for (int i = 0; i < TAM_POP; i++) printf("%i: %i\n", i, populacao[i].numParCob);
 
     if (populacao[0].numParCob > melhorFO) {
         melhorFO = populacao[0].numParCob;
@@ -225,13 +224,10 @@ void heuAleGA(Solucao &s) {
 }
 
 void crossover() {
-    int a, b;
+#pragma omp parallel for
     for (int i = TAM_POP - tamCem; i < TAM_POP; i++) {
-        a = rand() % (TAM_POP - tamCem);
-        b = rand() % (TAM_POP - tamElt);
-        (rand() % 2) ? gerarFilho(populacao[i], populacao[a], populacao[b]) : gerarFilho(populacao[i], populacao[b], populacao[a]);
+        gerarFilho(populacao[i], populacao[rand() % (TAM_POP - tamCem)], populacao[rand() % (TAM_POP - tamCem)]);
     }
-
 }
 
 void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
@@ -707,7 +703,7 @@ void escreverResultado(Solucao &s, char *path) {
 
 void escreverResumo(int *fos, double *tempos, char *path) {
     FILE *f = fopen(path, "a");
-    fprintf(f, "%i\t%i\t%i\t", TAM_POP, PRC_CEM, PRC_MUT);
+    fprintf(f, "%i\t%i\t%i\t%i\t%i\t", TAM_POP, PRC_CEM, PRC_MUT, PRC_ARE, PRC_GUL);
     for (int i = 0; i < NUM_EXE; i++) fprintf(f, "%i\t", fos[i]);
     for (int i = 0; i < NUM_EXE; i++) fprintf(f, "%.3f\t", tempos[i]);
 
