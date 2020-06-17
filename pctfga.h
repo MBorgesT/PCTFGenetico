@@ -7,6 +7,7 @@
 #define MAX_ARE 2600 // número máximo de arestas - baseado no tamanho das instâncias
 #define MAX_PAR 900  // número máximo de pares O-D - baseado no tamanho das instâncias
 // ----- Genetico
+#define MAX_POP 2000 // geraldo
 
 // ------------------------------- ESTRUTURAS -------------------------------
 typedef struct tAresta {
@@ -19,7 +20,7 @@ typedef struct tAresta {
 
 typedef struct tSolucao {
     int vetAre[MAX_ARE]; // vetor binário de arestas (1 - contador instalado; 0 - caso contrário)
-    int vetAreIds[50]; // para usar na geração de filhos do GA; obs: alterar tamanho do vetor
+    //int vetAreIds[50]; // para usar na geração de filhos do GA; obs: alterar tamanho do vetor
     int numAreCom; // número de arestas COM contador
     int numConIns; // número de contadores instalados
     int numFaiCob; // número de faixas cobertas
@@ -30,10 +31,8 @@ typedef struct tSolucao {
 
 //---------------------------- VARIÁVEIS GLOBAIS ----------------------------
 // ----- Genetico
-Solucao *populacao;
-int tamCem;
-int tamGul;
-int tamElt;
+Solucao populacao[MAX_POP]; // geraldo
+int limRemocao_; // geraldo
 // ----- Dados de entrada
 int numPar_; // número de pares O-D 
 int numNos_; // número de nós na rede
@@ -62,23 +61,14 @@ int maxContReal_; // número máximo REAL de contadores (definido com base no limi
 
 //--------------------------------- MÉTODOS ---------------------------------
 // ------------ Genetico
+// geraldo
 void execGA();
-
+void gerarFilho(const int &p1,const int &p2,int f);
 void gerarPopulacao();
-
-void heuAleGA(Solucao &s);
-
-void crossover();
-
-void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae);
-
+void gerarPopulacaoAleatorio();
 void gulosidade(Solucao &s);
-
-void ordenarPopulacao();
-
-void copiarSolucao(Solucao &destino, Solucao &origem);
-
 void epidemia();
+void ordenarPopulacao(const int &inicio);
 
 // ------------ SA
 void execSA(Solucao &s);

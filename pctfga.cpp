@@ -1,53 +1,42 @@
 #include "pctfga.h"
 
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include <time.h>
 #include <omp.h>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <cmath>
-#include <io.h>
-#include <sys/stat.h>
 
 #define DBG // habilita o modo DEBUG (exibe na tela as melhoras na FO)
-#define RND // habilita múltiplas (NUM_EXE) execuções com sementes aleatórias para a instância
+#define RND // habilita m?ltiplas (NUM_EXE) execu??es com sementes aleat?rias para a inst?ncia
+//#define DBG_TEMPO_GERACAO // habilita medidor de tempo de cada parte da gera??o da popula??o
+//#define DBG_TEMPO_GA // habilita medidor de tempo de cada parte do algoritmo genetico
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
-
 //============================== DADOS DE ENTRADA ==============================
-char INST[50] = "AC";  // arquivo com a instância (estado)
+char INST[50] = "AC";  // arquivo com a inst?ncia (estado)
 int ALFA = 30;    // limite de contadores instalados (% do total de arestas)
-int BETA = 10;    // limite de faixas cobertas (% do total de faixas)
-int NUM_EXE = 5;     // número de execuções do método
-double MAX_TIME = 6.0;  // tempo máximo de execução (segundos)
-int MAX_ITE = 1;     // número máximo de iterações (MAX_ITE = MAX_ITE * número de arestas)
-double INI_TMP = 2;     // temperatura inicial (INI_TMP = INI_TMP * fo da solução inicial)
-double FRZ_TMP = 0.01;  // temperatura de congelamento
-double COO_RTE = 0.975; // taxa de resfriamento
+int BETA = 20;    // limite de faixas cobertas (% do total de faixas)
+int NUM_EXE = 3;     // n?mero de execu??es do m?todo
+double MAX_TIME = 8.0;  // tempo m?ximo de execu??o (segundos)
+int MAX_ITE = 1;     // n?mero m?ximo de itera??es (MAX_ITE = MAX_ITE * n?mero de arestas)
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 700;
-int PRC_CEM = 10;
-int PRC_MUT = 20;
-int PRC_ARE = 100;
-int PRC_GUL = 100;
+int TAM_POP = 150; // 700
+int NUM_CRO = 20; // n?mero de cruzamentos em cada gera??o (usado no AG)
+int PER_REM = 50; // percentual de remo??o de contadores (usado na gera??o da popula??o inicial)
+int PRC_MUT = 40; // 20
+int PRC_GUL = 20; // 100
 //==============================================================================
-
 
 //================================== PRINCIPAL =================================
 int main(int argc, char *argv[]) {
-    FILE *f;
-    char arq[50], dir[50], slv[50];
-    int fos[NUM_EXE];
-    double tempos[NUM_EXE];
+    char arq[50];
 #ifdef RND
     srand(time(NULL));
 #else
     NUM_EXE = 1;
 #endif
-    //-----------------------
-    // parâmetros
     if (argc > 1) {
         strcpy(INST, argv[1]);
         ALFA = atoi(argv[2]);
@@ -55,231 +44,247 @@ int main(int argc, char *argv[]) {
         NUM_EXE = atoi(argv[4]);
         MAX_TIME = atoi(argv[5]);
         TAM_POP = atoi(argv[6]);
-        PRC_CEM = atoi(argv[7]);
-        PRC_MUT = atoi(argv[8]);
-        PRC_ARE = atoi(argv[9]);
-        PRC_GUL = atoi(argv[10]);
+        PRC_MUT = atoi(argv[7]);
+        PRC_GUL = atoi(argv[8]);
     }
 
-    tamGul = (int) (numAre_ * ((float) PRC_ARE / 100));
-    tamCem = (int) (TAM_POP * ((float) PRC_CEM / 100));
-
-    populacao = new Solucao[TAM_POP];
-    sprintf(arq, "..\\Instancias\\%s.txt", INST);
+    sprintf(arq, "../Instancias/%s.txt", INST);
     lerInstancia(arq);
-
-    strcpy(dir, "Solucoes");
-    sprintf(slv, "..\\SolucoesTesteCalibragem\\tamPop-%i prcCem-%i prcMut-%i", TAM_POP, PRC_CEM, PRC_MUT);
 
     montarRede();
 
     for (int r = 1; r <= NUM_EXE; r++) {
-        printf("\n\n>>> Resolvendo a instancia %s ALFA = %d e BETA = %d TAM_POP = %i PRC_CEM = %i PRC_MUT = %i PRC_ARE = %i PRC_GUL = %i - rodada %d\n",
-               INST, ALFA, BETA, TAM_POP, PRC_CEM, PRC_MUT, PRC_ARE, PRC_GUL, r);
-
         execGA();
-        fos[r - 1] = populacao[0].numParCob;
-        tempos[r - 1] = bstTime_;
     }
-    //-----------------------
-    // imprimir resumo
-    sprintf(arq, "..\\SolucoesTesteGulosidade\\resumo.txt");
 
-    escreverResumo(fos, tempos, arq);
     return 0;
-
-
 }
 //==============================================================================
 //==================================== GA ======================================
 
+// geraldo
 void execGA() {
-    int melhorFO, flag, aux, qtdGen = 0, qtdEpi = 0;
+    double h1, h2, h3;
+    double tempoGastoEpi = 0, auxEpi1, auxEpi2;
 
-    gerarPopulacao();
-    //---- ordena a população toda, o que não é necessário depois
-    Solucao escolhido;
-    int j;
+#ifdef DBG_TEMPO_GA
+    double aux1, aux2, aux3;
+#endif
 
-    for (int i = 1; i < TAM_POP; i++) {
-        copiarSolucao(escolhido, populacao[i]);
-        j = i - 1;
+    int flag, qtdGen = 0, qtdEpi = 0;
+    limRemocao_ = floor((PER_REM / 100.0) * (numAre_ - maxContReal_));
+    h1 = omp_get_wtime();
+    gerarPopulacaoAleatorio();
 
-        while ((j >= 0) && (populacao[j].numParCob < escolhido.numParCob)) {
-            copiarSolucao(populacao[j + 1], populacao[j]);
-            j--;
+#ifdef DBG
+    h3 = omp_get_wtime();
+    printf("tempo geracao: %.4f\n", h3 - h1);
+#endif
+
+    ordenarPopulacao(1);
+
+    h2 = omp_get_wtime();
+    while (h2 - h1 < MAX_TIME) {
+        int p1, p2;
+
+#ifdef DBG_TEMPO_GA
+        aux1 = omp_get_wtime();
+#endif
+
+        for (int i = 0; i < NUM_CRO; i++) {
+            p1 = rand() % TAM_POP;
+            do
+                p2 = rand() % TAM_POP;
+            while (p2 == p1);
+            gerarFilho(p1, p2, TAM_POP + i);
+            if (populacao[TAM_POP + i].numParCob > populacao[0].numParCob) {
+                bstTime_ = omp_get_wtime() - h1;
+                #ifdef DBG
+                    //printf("NOVO: bstSol: %i\tbstTempo: %.4f\n", populacao[TAM_POP + i].numParCob, bstTime_);
+                #endif
+            }
         }
 
-        copiarSolucao(populacao[j + 1], escolhido);
-    }
-    //----
+#ifdef DBG_TEMPO_GA
+        aux2 = omp_get_wtime();
+#endif
 
-    melhorFO = populacao[0].numParCob;
+        ordenarPopulacao(TAM_POP);
 
-    clock_t h1, h2;
-    h1 = clock();
-    h2 = clock();
+#ifdef DBG_TEMPO_GA
+        aux3 = omp_get_wtime();
+#endif
 
-    //---- teste de tempo
-    /*
-    clock_t h3;
-    double cross, ord, epi, total;
-
-    h3 = clock();
-    crossover();
-    cross = (clock() - h3) / (float) CLOCKS_PER_SEC;
-
-    h3 = clock();
-    ordenarPopulacao();
-    ord = (clock() - h3) / (float) CLOCKS_PER_SEC;
-
-    h3 = clock();
-    aux = populacao[0].numParCob;
-    flag = 1;
-    for (int i = 1; i < TAM_POP - tamCem; i++) {
-        if (populacao[i].numParCob != aux) {
-            flag = 0;
-            break;
-        }
-    }
-    if (flag == 1) {
-        epidemia();
-        qtdEpi++;
-    }
-    epi = (clock() - h3) / (float) CLOCKS_PER_SEC;
-
-    h3 = clock();
-    total = (h3 - h1) / (float) CLOCKS_PER_SEC;
-
-    printf("cross: %.2f\tord: %.2f\tepi: %.2f\n", (double)cross/(double)total, (double)ord/(double)total,
-            (double)epi/(double)total);
-
-
-    if (populacao[0].numParCob > melhorFO) {
-        melhorFO = populacao[0].numParCob;
-        bstTime_ = (clock() - h1) / (float) CLOCKS_PER_SEC;
-    }
-
-    h2 = clock();
-    qtdGen++;
-    */
-    //----
-
-    while (((double) ((h2 - h1)) / CLOCKS_PER_SEC) < MAX_TIME) {
-        crossover();
-        ordenarPopulacao();
-
-        aux = populacao[0].numParCob;
         flag = 1;
-        for (int i = 1; i < TAM_POP - tamCem; i++) {
-            if (populacao[i].numParCob != aux) {
+        for (int i = 1; i < TAM_POP; i++) {
+            if (populacao[i].numParCob != populacao[0].numParCob) {
                 flag = 0;
                 break;
             }
         }
         if (flag == 1) {
+            auxEpi1 = omp_get_wtime();
             epidemia();
+            auxEpi2 = omp_get_wtime();
+            tempoGastoEpi += auxEpi2 - auxEpi1;
             qtdEpi++;
         }
-
-        if (populacao[0].numParCob > melhorFO) {
-            melhorFO = populacao[0].numParCob;
-            bstTime_ = (clock() - h1) / (float) CLOCKS_PER_SEC;
-        }
-
-        h2 = clock();
         qtdGen++;
+
+        h2 = omp_get_wtime();
+
+#ifdef DBG_TEMPO_GA
+        if (qtdGen == 1) printf("geracao filho: %.4f\tordenacao: %.4f\tresto: %.4f\n", ((aux2-aux1)/(h2-aux1)), ((aux3-aux2)/(h2-aux1)), ((h2-aux3)/(h2-aux1)));
+#endif
     }
 
-    printf("bstSol: %i\tbstTempo: %.4f\tqtd gen: %i\tqtd epi: %i\tdiv: %.5f\n", populacao[0].numParCob, bstTime_,
-           qtdGen, qtdEpi, (float) qtdEpi / (float) qtdGen);
+
+#ifdef DBG
+    printf("FINAL: bstSol: %i\tbstTempo: %.4f\tqtd gen: %i\tqtd epi: %i\ttempo gasto em epi: %.3f\n\n\n", populacao[0].numParCob, bstTime_,
+           qtdGen, qtdEpi, tempoGastoEpi);
+#endif
 }
 
-void gerarPopulacao() {
-    for (int i = 0; i < TAM_POP; i++) {
-        heuAleGA(populacao[i]);
-    }
-}
-
-void heuAleGA(Solucao &s) {
-    int aux, i = 0;
-    memset(s.vetAre, 0, sizeof(s.vetAre));
-    s.numConIns = s.numFaiCob = 0;
-    s.numAreCom = 0;
-    do {
-        aux = rand() % numTotAre_;
-        s.vetAre[aux] = 1;
-        s.numConIns += vetArestas_[aux].nCon;
-        s.numFaiCob += vetArestas_[aux].nFai;
-        s.vetAreIds[i] = aux;
-        i++;
-    } while ((s.numConIns < maxContReal_) && (s.numFaiCob < maxFaix_));
-
-    s.vetAre[aux] = 0;
-    s.numConIns -= vetArestas_[aux].nCon;
-    s.numFaiCob -= vetArestas_[aux].nFai;
-    s.numAreCom = i - 1;
-
-    calcParCob(s);
-}
-
-void crossover() {
-#pragma omp parallel for
-    for (int i = TAM_POP - tamCem; i < TAM_POP; i++) {
-        gerarFilho(populacao[i], populacao[rand() % (TAM_POP - tamCem)], populacao[rand() % (TAM_POP - tamCem)]);
-    }
-}
-
-void gerarFilho(Solucao &filho, Solucao &pai, Solucao &mae) {
-    int aux = (rand() % ((pai.numAreCom + mae.numAreCom) / 2) - 1) + 1;
-    // possivel problema com array out of limits na hora de puxar
-
-    memset(filho.vetAre, 0, sizeof(filho.vetAre));
-    filho.numConIns = filho.numFaiCob = 0;
-    filho.numAreCom = 0;
-
+void gerarFilho(const int &p1, const int &p2, int f) {
+    int aux = 1 + rand() % (numAre_ - 2);
+    memset(populacao[f].vetAre, 0, sizeof(populacao[f].vetAre));
+    populacao[f].numConIns = populacao[f].numFaiCob = populacao[f].numAreCom = 0;
     for (int i = 0; i < aux; i++) {
-        filho.vetAre[pai.vetAreIds[i]] = 1;
-        filho.numConIns += vetArestas_[pai.vetAreIds[i]].nCon;
-        filho.numFaiCob += vetArestas_[pai.vetAreIds[i]].nFai;
-        filho.vetAreIds[i] = pai.vetAreIds[i];
-        filho.numAreCom++;
+        populacao[f].vetAre[i] = populacao[p1].vetAre[i];
+        populacao[f].numConIns += (populacao[p1].vetAre[i] * vetArestas_[i].nCon);
+        populacao[f].numFaiCob += (populacao[p1].vetAre[i] * vetArestas_[i].nFai);
+        populacao[f].numAreCom += (populacao[p1].vetAre[i]);
     }
-    for (int i = aux; i < mae.numAreCom; i++) {
-        filho.vetAre[mae.vetAreIds[i]] = 1;
-        filho.numConIns += vetArestas_[mae.vetAreIds[i]].nCon;
-        filho.numFaiCob += vetArestas_[mae.vetAreIds[i]].nFai;
-        filho.vetAreIds[i] = mae.vetAreIds[i];
-        filho.numAreCom++;
+    for (int i = aux; i < numAre_; i++) {
+        populacao[f].vetAre[i] = populacao[p2].vetAre[i];
+        populacao[f].numConIns += (populacao[p2].vetAre[i] * vetArestas_[i].nCon);
+        populacao[f].numFaiCob += (populacao[p2].vetAre[i] * vetArestas_[i].nFai);
+        populacao[f].numAreCom += (populacao[p2].vetAre[i]);
     }
 
     if (rand() % 100 < PRC_MUT) {
-        gerVizinho(filho);
-
-        aux = 0;
-        for (int i = 0; i < numAre_; i++) {
-            if (filho.vetAre[i] == 1) {
-                filho.vetAreIds[aux] = i;
-                aux++;
-            }
-        }
-        filho.numAreCom = aux;
+        gerVizinho(populacao[f]);
     }
 
     if (rand() % 100 < PRC_GUL) {
-        gulosidade(filho);
+        gulosidade(populacao[f]);
     } else {
         int pos;
-        while ((filho.numConIns > maxContReal_) || (filho.numFaiCob > maxFaix_)) {
+        while ((populacao[f].numConIns > maxContReal_) || (populacao[f].numFaiCob > maxFaix_)) {
             do
                 pos = rand() % numAre_;
-            while (filho.vetAre[pos] == 0);
-            filho.vetAre[pos] = 0;
-            filho.numConIns -= vetArestas_[pos].nCon;
-            filho.numFaiCob -= vetArestas_[pos].nFai;
+            while (populacao[f].vetAre[pos] == 0);
+            populacao[f].vetAre[pos] = 0;
+            populacao[f].numConIns -= vetArestas_[pos].nCon;
+            populacao[f].numFaiCob -= vetArestas_[pos].nFai;
+            populacao[f].numAreCom--;
+        }
+        calcParCob(populacao[f]);
+    }
+}
+
+void gerarPopulacao() {
+    int foAntes, bstFO, bstPos, aux, limite;
+
+#ifdef DBG_TEMPO_GERACAO
+    double aux1, aux2, aux3, aux4, aux5;
+#endif
+
+    for (int p = 0; p < TAM_POP + NUM_CRO; p++) {
+        memset(populacao[p].vetAre, 0, sizeof(populacao[p].vetAre));
+        populacao[p].numConIns = populacao[p].numFaiCob = 0;
+        populacao[p].numAreCom = numAre_;
+
+#ifdef DBG_TEMPO_GERACAO
+        aux1 = omp_get_wtime();
+#endif
+        // insere contador em todas as arestas
+        for (int i = 0; i < numAre_; i++) {
+            populacao[p].vetAre[i] = 1;
+            populacao[p].numConIns += vetArestas_[i].nCon;
+            populacao[p].numFaiCob += vetArestas_[i].nFai;
+        }
+        populacao[p].numParCob = maxPar_;
+
+#ifdef DBG_TEMPO_GERACAO
+        aux2 = omp_get_wtime();
+#endif
+        // remove alguns (at? o limite) contadores aleatoriamente
+        limite = rand() % limRemocao_;
+        for (int i = 0; i < limite; i++) {
+            do
+                aux = rand() % numAre_;
+            while (populacao[p].vetAre[aux] == 0);
+            populacao[p].vetAre[aux] = 0;
+            populacao[p].numConIns -= vetArestas_[aux].nCon;
+            populacao[p].numFaiCob -= vetArestas_[aux].nFai;
+            populacao[p].numAreCom--;
         }
 
-        calcParCob(filho);
+#ifdef DBG_TEMPO_GERACAO
+        aux3 = omp_get_wtime();
+#endif
+        // remove contadores de forma GULOSA, at? encontrar uma solu??o vi?vel
+        while ((populacao[p].numConIns > maxContReal_) || (populacao[p].numFaiCob > maxFaix_)) {
+            bstFO = bstPos = -1;
+            for (int i = 0; i < numAre_; i++) {
+                if (populacao[p].vetAre[i] == 1) {
+                    foAntes = populacao[p].numParCob;
+                    populacao[p].vetAre[i] = 0;
+                    calcParCob(populacao[p]);
+                    if (populacao[p].numParCob > bstFO) {
+                        bstFO = populacao[p].numParCob;
+                        bstPos = i;
+                    }
+                    populacao[p].vetAre[i] = 1;
+                    populacao[p].numParCob = foAntes;
+                }
+            }
+            populacao[p].vetAre[bstPos] = 0;
+            populacao[p].numConIns -= vetArestas_[bstPos].nCon;
+            populacao[p].numFaiCob -= vetArestas_[bstPos].nFai;
+            populacao[p].numAreCom--;
+            populacao[p].numParCob = bstFO;
+        }
+
+#ifdef DBG_TEMPO_GERACAO
+        aux4 = omp_get_wtime();
+#endif
+
+        calcParCob(populacao[p]);
+
+#ifdef DBG_TEMPO_GERACAO
+        aux5 = omp_get_wtime();
+#endif
+    }
+
+#ifdef DBG_TEMPO_GERACAO
+    printf("insercao contador: %.4f\nremocao aleatoria: %.4f\nremocao gulosa: %.4f\ncalculo FO: %.4f\n", ((aux2-aux1)/(aux5-aux1)), ((aux3-aux2)/(aux5-aux1)), ((aux4-aux3)/(aux5-aux1)), ((aux5-aux4)/(aux5-aux1)));
+#endif
+}
+
+void gerarPopulacaoAleatorio() {
+    for (int p = 0; p < TAM_POP + NUM_CRO; p++) {
+        int aux, contAre = 0;
+        memset(populacao[p].vetAre, 0, sizeof(populacao[p].vetAre));
+        populacao[p].numConIns = populacao[p].numFaiCob = 0;
+        populacao[p].numAreCom = 0;
+        do {
+            do
+                aux = rand() % numTotAre_;
+            while(populacao[p].vetAre[aux] == 1);
+            populacao[p].vetAre[aux] = 1;
+            populacao[p].numConIns += vetArestas_[aux].nCon;
+            populacao[p].numFaiCob += vetArestas_[aux].nFai;
+            contAre++;
+        } while ((populacao[p].numConIns < maxContReal_) && (populacao[p].numFaiCob < maxFaix_));
+
+        populacao[p].vetAre[aux] = 0;
+        populacao[p].numConIns -= vetArestas_[aux].nCon;
+        populacao[p].numFaiCob -= vetArestas_[aux].nFai;
+        populacao[p].numAreCom = contAre - 1;
+
+        calcParCob(populacao[p]);
     }
 }
 
@@ -288,37 +293,31 @@ void gulosidade(Solucao &s) {
     while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
         flag = 1;
         melhorFO = melhorId = -1;
-        for (int i = 0; i < s.numAreCom; i++) {
-            aux2 = s.numParCob;
-            s.vetAre[s.vetAreIds[i]] = 0;
-            calcParCob(s);
-            if (s.numParCob > melhorFO) {
-                melhorFO = s.numParCob;
-                melhorId = s.vetAreIds[i];
-            }
-            s.vetAre[s.vetAreIds[i]] = 1;
-            s.numParCob = aux2;
-        }
-        s.vetAre[melhorId] = 0;
-        aux = 0;
         for (int i = 0; i < numAre_; i++) {
             if (s.vetAre[i] == 1) {
-                s.vetAreIds[aux] = i;
-                aux++;
+                aux2 = s.numParCob;
+                s.vetAre[i] = 0;
+                calcParCob(s);
+                if (s.numParCob > melhorFO) {
+                    melhorFO = s.numParCob;
+                    melhorId = i;
+                }
+                s.vetAre[i] = 1;
+                s.numParCob = aux2;
             }
         }
+        s.vetAre[melhorId] = 0;
         s.numConIns -= vetArestas_[melhorId].nCon;
         s.numFaiCob -= vetArestas_[melhorId].nFai;
-        s.numAreCom = aux;
+        s.numAreCom--;
         s.numParCob = melhorFO;
     }
-
     if (flag == 0 && s.numConIns != maxContReal_ && s.numFaiCob != maxFaix_) {
         while ((s.numConIns < maxContReal_) && (s.numFaiCob < maxFaix_)) {
             melhorFO = melhorId = -1;
-            aux = rand() % (numAre_ - tamGul);
+            aux = rand() % numAre_;
             foAnterior = s.numParCob;
-            for (int i = aux; i < aux + tamGul; i++) {
+            for (int i = aux; i < numAre_; i++) {
                 if (s.vetAre[i] == 0) {
                     aux2 = s.numParCob;
                     s.vetAre[i] = 1;
@@ -332,32 +331,17 @@ void gulosidade(Solucao &s) {
                 }
             }
             s.vetAre[melhorId] = 1;
-            aux = 0;
-            for (int i = 0; i < numAre_; i++) {
-                if (s.vetAre[i] == 1) {
-                    s.vetAreIds[aux] = i;
-                    aux++;
-                }
-            }
             s.numConIns += vetArestas_[melhorId].nCon;
             s.numFaiCob += vetArestas_[melhorId].nFai;
-            s.numAreCom = aux;
+            s.numAreCom++;
             s.numParCob = melhorFO;
         }
         if (!(((s.numConIns == maxContReal_) && (s.numFaiCob <= maxFaix_)) ||
               ((s.numConIns <= maxContReal_) && (s.numFaiCob == maxFaix_)))) {
-
             s.vetAre[melhorId] = 0;
-            aux = 0;
-            for (int i = 0; i < numAre_; i++) {
-                if (s.vetAre[i] == 1) {
-                    s.vetAreIds[aux] = i;
-                    aux++;
-                }
-            }
             s.numConIns -= vetArestas_[melhorId].nCon;
             s.numFaiCob -= vetArestas_[melhorId].nFai;
-            s.numAreCom = aux;
+            s.numAreCom--;
             s.numParCob = foAnterior;
         }
     } else {
@@ -365,134 +349,51 @@ void gulosidade(Solucao &s) {
     }
 }
 
-void ordenarPopulacao() {
-    Solucao escolhido;
-    int j;
-
-    for (int i = TAM_POP - tamCem; i < TAM_POP; i++) {
-        copiarSolucao(escolhido, populacao[i]);
-        j = i - 1;
-
-        while ((j >= 0) && (populacao[j].numParCob < escolhido.numParCob)) {
-            copiarSolucao(populacao[j + 1], populacao[j]);
-            j--;
-        }
-
-        copiarSolucao(populacao[j + 1], escolhido);
-    }
-}
-
-void copiarSolucao(Solucao &destino, Solucao &origem) {
-    memcpy(&destino, &origem, sizeof(origem));
-}
-
 void epidemia() {
     Solucao melhor;
-    copiarSolucao(melhor, populacao[0]);
+    memcpy(&melhor, &populacao[0], sizeof(populacao[0]));
+    gerarPopulacaoAleatorio();
+    memcpy(&populacao[TAM_POP], &melhor, sizeof(melhor));
+    ordenarPopulacao(1);
+}
 
-    gerarPopulacao();
-    copiarSolucao(populacao[0], melhor);
-    //---- ordena a população toda, o que não é necessário depois
-    int j;
+void ordenarPopulacao(const int &inicio) {
     Solucao escolhido;
-    for (int i = 1; i < TAM_POP; i++) {
-        copiarSolucao(escolhido, populacao[i]);
+    int j;
+    for (int i = inicio; i < TAM_POP + NUM_CRO; i++) {
+        memcpy(&escolhido, &populacao[i], sizeof(populacao[i]));
         j = i - 1;
-
         while ((j >= 0) && (populacao[j].numParCob < escolhido.numParCob)) {
-            copiarSolucao(populacao[j + 1], populacao[j]);
+            memcpy(&populacao[j + 1], &populacao[j], sizeof(populacao[i]));
             j--;
         }
-
-        copiarSolucao(populacao[j + 1], escolhido);
+        memcpy(&populacao[j + 1], &escolhido, sizeof(populacao[i]));
     }
-    //----
+
 }
 
-//==================================== CS ======================================
 
-//------------------------------------------------------------------------------
-void execSA(Solucao &s) {
-    clock_t hI, hF;
-    Solucao sA, sV;
-    double x, iniTmp, tmp;
-    int iter, itMax, foAux;
-    iniTmp = MAX(10, INI_TMP * s.numParCob);
-    itMax = MAX_ITE * numAre_;
-    hI = clock();
-    criarSolucao(s);
-    hF = clock();
-    bstTime_ = ((double) hF - hI) / CLOCKS_PER_SEC;
-    memcpy(&sA, &s, sizeof(s));
-    foIni_ = s.numParCob;
-#ifdef DBG
-    printf("\n>>> Sol. Ini.: %d\tTempo: %.2f\n\n", foIni_, bstTime_);
-#endif
-    solAva_ = 1;
-    excTime_ = 0.0;
-    while (excTime_ < MAX_TIME) {
-        tmp = iniTmp;
-        while (tmp > FRZ_TMP) {
-            for (int i = 0; i < itMax; i++) {
-                solAva_++;
-                memcpy(&sV, &sA, sizeof(sA));
-                gerVizinho(sV);
-                if (sV.numParCob > sA.numParCob) {
-                    memcpy(&sA, &sV, sizeof(sV));
-                    if (sV.numParCob > s.numParCob) {
-                        hF = clock();
-                        bstTime_ = ((double) hF - hI) / CLOCKS_PER_SEC;
-                        memcpy(&s, &sV, sizeof(sV));
-#ifdef DBG
-                        printf(">>> Best Sol: %d\tTempo: %.2f\n", s.numParCob, bstTime_);
-#endif
-                    }
-                } else {
-                    x = rand() % 1001;
-                    x = x / 1000.0;
-                    if (x < expl(-(sA.numParCob - sV.numParCob) / tmp))
-                        memcpy(&sA, &sV, sizeof(sV));
-                }
-                hF = clock();
-                excTime_ = ((double) hF - hI) / CLOCKS_PER_SEC;
-                if (excTime_ >= MAX_TIME)
-                    goto FIM;
-            }
-            tmp = COO_RTE * tmp;
-        }
-    }
-    hF = clock();
-    excTime_ = ((double) hF - hI) / CLOCKS_PER_SEC;
-    FIM :;
-    foFin_ = s.numParCob;
-#ifdef DBG
-    printf("\n>>> Sol. Fin.: %d\tTempo: %.2f\tSol. Ava.: %d\n", foFin_, excTime_, solAva_);
-#endif
-}
+
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 void gerVizinho(Solucao &s) {
     int pos;
-    pos = rand() % numAre_;
-    if (s.vetAre[pos] == 1) {
+    do
+        pos = rand() % numAre_;
+    while (s.vetAre[pos] == 1);
+    s.vetAre[pos] = 1;
+    s.numConIns += vetArestas_[pos].nCon;
+    s.numFaiCob += vetArestas_[pos].nFai;
+    //-----------------------
+    // remover contadores at? que a solu??o fique vi?vel
+    while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
+        do
+            pos = rand() % numAre_;
+        while (s.vetAre[pos] == 0);
         s.vetAre[pos] = 0;
         s.numConIns -= vetArestas_[pos].nCon;
         s.numFaiCob -= vetArestas_[pos].nFai;
-    } else {
-        s.vetAre[pos] = 1;
-        s.numConIns += vetArestas_[pos].nCon;
-        s.numFaiCob += vetArestas_[pos].nFai;
-        //-----------------------
-        // remover contadores até que a solução fique viável
-        while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
-            do
-                pos = rand() % numAre_;
-            while (s.vetAre[pos] == 0);
-            s.vetAre[pos] = 0;
-            s.numConIns -= vetArestas_[pos].nCon;
-            s.numFaiCob -= vetArestas_[pos].nFai;
-        }
     }
 }
 //------------------------------------------------------------------------------
@@ -500,7 +401,7 @@ void gerVizinho(Solucao &s) {
 //==============================================================================
 
 
-//================================== SOLUÇÃO ===================================
+//================================== SOLU??O ===================================
 
 //------------------------------------------------------------------------------
 void criarSolucao(Solucao &s) {
@@ -576,7 +477,7 @@ int calcPar(Solucao &s, const int &n1) {
                     }
                     vetBFSVis[v] = 1;
                     vetBFSFila[iniFila +
-                               tamFila] = v; // circular: vetBFSFila_[(iniFila+tamFila)%MAX_NOS] = v; - não foi necessário
+                               tamFila] = v; // circular: vetBFSFila_[(iniFila+tamFila)%MAX_NOS] = v; - n?o foi necess?rio
                     tamFila++;
                 }
             }
@@ -588,7 +489,7 @@ int calcPar(Solucao &s, const int &n1) {
 //==============================================================================
 
 
-//============================== ENTRADA E SAÍDA ===============================
+//============================== ENTRADA E SA?DA ===============================
 
 //------------------------------------------------------------------------------
 void lerInstancia(char *arq) {
@@ -684,14 +585,14 @@ void escreverResultado(Solucao &s, char *path) {
     fprintf(f, "Numero de nos.......................................: %d\n", numNos_);
     fprintf(f, "Numero de arestas...................................: %d\n", numAre_);
     fprintf(f, "Numero de arestas virtuais..........................: %d\n", numAreVir_);
-    fprintf(f, "Numero total de arestas (sem redução)...............: %d\n", numTotAre_);
-    fprintf(f, "Numero total de faixas (sem redução)................: %d\n", numTotFai_);
+    fprintf(f, "Numero total de arestas (sem redu??o)...............: %d\n", numTotAre_);
+    fprintf(f, "Numero total de faixas (sem redu??o)................: %d\n", numTotFai_);
     fprintf(f, "Numero de nos que definem os pares..................: %d\n", numPar_);
     fprintf(f, "Numero total de pares...............................: %d\n", maxPar_);
     fprintf(f, "\n< --------------------------- PARAMETROS --------------------------- >\n");
-    fprintf(f, "Tamanho da população................................: %i\n", TAM_POP);
-    fprintf(f, "Quantidade de cruzamentos por geração...............: %i\n", tamCem);
-    fprintf(f, "Porcentagem da chance de mutação....................: %i\n", PRC_MUT);
+    fprintf(f, "Tamanho da popula??o................................: %i\n", TAM_POP);
+    //fprintf(f, "Quantidade de cruzamentos por gera??o...............: %i\n", tamCem);
+    fprintf(f, "Porcentagem da chance de muta??o....................: %i\n", PRC_MUT);
     fprintf(f, "N. maximo de iteracoes..............................: %d\n", MAX_ITE);
     fprintf(f, "Tempo maximo de processamento.......................: %.5f segundos!\n", MAX_TIME);
     fprintf(f, "\n< --------------------------- RESULTADOS --------------------------- >\n");
@@ -703,7 +604,7 @@ void escreverResultado(Solucao &s, char *path) {
 
 void escreverResumo(int *fos, double *tempos, char *path) {
     FILE *f = fopen(path, "a");
-    fprintf(f, "%i\t%i\t%i\t%i\t%i\t", TAM_POP, PRC_CEM, PRC_MUT, PRC_ARE, PRC_GUL);
+    //fprintf(f, "%i\t%i\t%i\t%i\t%i\t", TAM_POP, PRC_CEM, PRC_MUT, PRC_ARE, PRC_GUL);
     for (int i = 0; i < NUM_EXE; i++) fprintf(f, "%i\t", fos[i]);
     for (int i = 0; i < NUM_EXE; i++) fprintf(f, "%.3f\t", tempos[i]);
 

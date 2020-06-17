@@ -6,27 +6,3 @@
 
 #IncludeRegexTransform: 
 
-C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.cpp
-pctfga.h
-C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.h
-time.h
--
-omp.h
--
-cstring
--
-cstdlib
--
-cstdio
--
-cmath
--
-io.h
--
-sys/stat.h
--
-
-C:/Users/Matheus/CLionProjects/PCTFGenetico/pctfga.h
-iostream
--
-

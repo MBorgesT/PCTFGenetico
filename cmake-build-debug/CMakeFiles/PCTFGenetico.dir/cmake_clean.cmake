@@ -1,9 +1,7 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/PCTFGenetico.dir/pctfga.cpp.obj"
-  "PCTFGenetico.exe"
-  "PCTFGenetico.exe.manifest"
+  "CMakeFiles/PCTFGenetico.dir/pctfga.cpp.o"
+  "PCTFGenetico"
   "PCTFGenetico.pdb"
-  "libPCTFGenetico.dll.a"
 )
 
 # Per-language clean rules from dependency scanning.

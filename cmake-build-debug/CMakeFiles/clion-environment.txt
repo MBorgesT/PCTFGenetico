@@ -1,4 +1,3 @@
-ToolSet: 3.18 (local)@C:\MinGW
-Options: 
+ToolSet: 1.0 (local)Options: 
 
 Options:
