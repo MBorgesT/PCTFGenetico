@@ -17,16 +17,18 @@
 //============================== DADOS DE ENTRADA ==============================
 char INST[50] = "AC";  // arquivo com a inst?ncia (estado)
 int ALFA = 30;    // limite de contadores instalados (% do total de arestas)
-int BETA = 20;    // limite de faixas cobertas (% do total de faixas)
-int NUM_EXE = 3;     // n?mero de execu??es do m?todo
-double MAX_TIME = 8.0;  // tempo m?ximo de execu??o (segundos)
+int BETA = 30;    // limite de faixas cobertas (% do total de faixas)
+int NUM_EXE = 1;     // n?mero de execu??es do metodo
+double MAX_TIME = 20.0;  // tempo m?ximo de execu??o (segundos)
 int MAX_ITE = 1;     // n?mero m?ximo de itera??es (MAX_ITE = MAX_ITE * n?mero de arestas)
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 150; // 700
+int TAM_POP = 100; // 700
 int NUM_CRO = 20; // n?mero de cruzamentos em cada gera??o (usado no AG)
-int PER_REM = 50; // percentual de remo??o de contadores (usado na gera??o da popula??o inicial)
-int PRC_MUT = 40; // 20
-int PRC_GUL = 20; // 100
+int PER_REM = 25; // percentual de remo??o de contadores (usado na gera??o da popula??o inicial)
+int QTD_REM_GUL = 12; // numero dentre quantas arestas serao testadas para decidir qual a melhor inserir na geracao de populacao
+int PRC_MUT = 20; // chance de se ocorrer uma mutacao
+int QTD_VIZ_MUT = 15; // quantidade de vezes que se adiciona uma nova aresta aleatoria na solucao na mutacao
+int PRC_GUL = 20; // chance de se melhorar a solucao por uma funcao gulosa
 //==============================================================================
 
 //================================== PRINCIPAL =================================
@@ -42,10 +44,14 @@ int main(int argc, char *argv[]) {
         ALFA = atoi(argv[2]);
         BETA = atoi(argv[3]);
         NUM_EXE = atoi(argv[4]);
-        MAX_TIME = atoi(argv[5]);
+        MAX_TIME = atof(argv[5]);
         TAM_POP = atoi(argv[6]);
-        PRC_MUT = atoi(argv[7]);
-        PRC_GUL = atoi(argv[8]);
+        NUM_CRO = atoi(argv[7]);
+        PER_REM = atoi(argv[8]);
+        QTD_REM_GUL = atoi(argv[9]);
+        PRC_MUT = atoi(argv[10]);
+        QTD_VIZ_MUT = atoi(argv[11]);
+        PRC_GUL = atoi(argv[12]);
     }
 
     sprintf(arq, "../Instancias/%s.txt", INST);
@@ -62,24 +68,28 @@ int main(int argc, char *argv[]) {
 //==============================================================================
 //==================================== GA ======================================
 
-// geraldo
 void execGA() {
+	#ifdef DBG
+	printf("INST:%s\tALFA:%i\tBETA:%i\tNUM_EXE:%i\tMAX_TIME:%.1f\tTAM_POP:%i\tPER_REM:%i\tQTD_REM_GUL:%i\tPRC_MUT:%i\tQTD_VIZ_MUT:%i\tPRC_GUL:%i\n",
+			INST, ALFA, BETA, NUM_EXE, MAX_TIME, TAM_POP, PER_REM, QTD_REM_GUL, PRC_MUT, QTD_VIZ_MUT, PRC_GUL);
+	#endif
+
     double h1, h2, h3;
     double tempoGastoEpi = 0, auxEpi1, auxEpi2;
 
-#ifdef DBG_TEMPO_GA
+    #ifdef DBG_TEMPO_GA
     double aux1, aux2, aux3;
-#endif
+    #endif
 
     int flag, qtdGen = 0, qtdEpi = 0;
     limRemocao_ = floor((PER_REM / 100.0) * (numAre_ - maxContReal_));
     h1 = omp_get_wtime();
-    gerarPopulacaoAleatorio();
+    gerarPopulacao();
 
-#ifdef DBG
+    #ifdef DBG
     h3 = omp_get_wtime();
     printf("tempo geracao: %.4f\n", h3 - h1);
-#endif
+    #endif
 
     ordenarPopulacao(1);
 
@@ -87,9 +97,9 @@ void execGA() {
     while (h2 - h1 < MAX_TIME) {
         int p1, p2;
 
-#ifdef DBG_TEMPO_GA
+        #ifdef DBG_TEMPO_GA
         aux1 = omp_get_wtime();
-#endif
+        #endif
 
         for (int i = 0; i < NUM_CRO; i++) {
             p1 = rand() % TAM_POP;
@@ -100,20 +110,20 @@ void execGA() {
             if (populacao[TAM_POP + i].numParCob > populacao[0].numParCob) {
                 bstTime_ = omp_get_wtime() - h1;
                 #ifdef DBG
-                    //printf("NOVO: bstSol: %i\tbstTempo: %.4f\n", populacao[TAM_POP + i].numParCob, bstTime_);
+                printf("NOVO: bstSol: %i\tbstTempo: %.4f\n", populacao[TAM_POP + i].numParCob, bstTime_);
                 #endif
             }
         }
 
-#ifdef DBG_TEMPO_GA
+        #ifdef DBG_TEMPO_GA
         aux2 = omp_get_wtime();
-#endif
+        #endif
 
         ordenarPopulacao(TAM_POP);
 
-#ifdef DBG_TEMPO_GA
+        #ifdef DBG_TEMPO_GA
         aux3 = omp_get_wtime();
-#endif
+        #endif
 
         flag = 1;
         for (int i = 1; i < TAM_POP; i++) {
@@ -123,26 +133,35 @@ void execGA() {
             }
         }
         if (flag == 1) {
+            #ifdef DBG
             auxEpi1 = omp_get_wtime();
+            printf("epidemia\n");
+            #endif
             epidemia();
+            #ifdef DBG
             auxEpi2 = omp_get_wtime();
             tempoGastoEpi += auxEpi2 - auxEpi1;
             qtdEpi++;
+            #endif
         }
         qtdGen++;
 
         h2 = omp_get_wtime();
 
-#ifdef DBG_TEMPO_GA
+        #ifdef DBG_TEMPO_GA
         if (qtdGen == 1) printf("geracao filho: %.4f\tordenacao: %.4f\tresto: %.4f\n", ((aux2-aux1)/(h2-aux1)), ((aux3-aux2)/(h2-aux1)), ((h2-aux3)/(h2-aux1)));
-#endif
+        #endif
     }
 
+    char path[100];
+    sprintf(path, "../solucoes/%s/ALFA:%i-BETA:%i.txt", INST, ALFA, BETA);
+    escreverResultado(populacao[0], path);
 
-#ifdef DBG
-    printf("FINAL: bstSol: %i\tbstTempo: %.4f\tqtd gen: %i\tqtd epi: %i\ttempo gasto em epi: %.3f\n\n\n", populacao[0].numParCob, bstTime_,
+    #ifdef DBG
+    printf("FINAL: bstSol: %i\tbstTempo: %.4f\tqtd gen: %i\tqtd epi: %i\ttempo gasto em epi: %.3f\n\n\n",
+           populacao[0].numParCob, bstTime_,
            qtdGen, qtdEpi, tempoGastoEpi);
-#endif
+    #endif
 }
 
 void gerarFilho(const int &p1, const int &p2, int f) {
@@ -168,7 +187,7 @@ void gerarFilho(const int &p1, const int &p2, int f) {
 
     if (rand() % 100 < PRC_GUL) {
         gulosidade(populacao[f]);
-    } else {
+    } else { // a fun??o de gulosidade ja calcula a FO
         int pos;
         while ((populacao[f].numConIns > maxContReal_) || (populacao[f].numFaiCob > maxFaix_)) {
             do
@@ -184,7 +203,7 @@ void gerarFilho(const int &p1, const int &p2, int f) {
 }
 
 void gerarPopulacao() {
-    int foAntes, bstFO, bstPos, aux, limite;
+    int foAntes, bstFO, bstPos, aux, limite, auxRandGul;
 
 #ifdef DBG_TEMPO_GERACAO
     double aux1, aux2, aux3, aux4, aux5;
@@ -227,18 +246,19 @@ void gerarPopulacao() {
         // remove contadores de forma GULOSA, at? encontrar uma solu??o vi?vel
         while ((populacao[p].numConIns > maxContReal_) || (populacao[p].numFaiCob > maxFaix_)) {
             bstFO = bstPos = -1;
-            for (int i = 0; i < numAre_; i++) {
-                if (populacao[p].vetAre[i] == 1) {
-                    foAntes = populacao[p].numParCob;
-                    populacao[p].vetAre[i] = 0;
-                    calcParCob(populacao[p]);
-                    if (populacao[p].numParCob > bstFO) {
-                        bstFO = populacao[p].numParCob;
-                        bstPos = i;
-                    }
-                    populacao[p].vetAre[i] = 1;
-                    populacao[p].numParCob = foAntes;
+            for (int i = 0; i < QTD_REM_GUL; i++) {
+                do
+                    auxRandGul = rand() % numAre_;
+                while (populacao[p].vetAre[auxRandGul] == 0);
+                foAntes = populacao[p].numParCob;
+                populacao[p].vetAre[auxRandGul] = 0;
+                calcParCob(populacao[p]);
+                if (populacao[p].numParCob > bstFO) {
+                    bstFO = populacao[p].numParCob;
+                    bstPos = auxRandGul;
                 }
+                populacao[p].vetAre[auxRandGul] = 1;
+                populacao[p].numParCob = foAntes;
             }
             populacao[p].vetAre[bstPos] = 0;
             populacao[p].numConIns -= vetArestas_[bstPos].nCon;
@@ -272,7 +292,7 @@ void gerarPopulacaoAleatorio() {
         do {
             do
                 aux = rand() % numTotAre_;
-            while(populacao[p].vetAre[aux] == 1);
+            while (populacao[p].vetAre[aux] == 1);
             populacao[p].vetAre[aux] = 1;
             populacao[p].numConIns += vetArestas_[aux].nCon;
             populacao[p].numFaiCob += vetArestas_[aux].nFai;
@@ -352,8 +372,8 @@ void gulosidade(Solucao &s) {
 void epidemia() {
     Solucao melhor;
     memcpy(&melhor, &populacao[0], sizeof(populacao[0]));
-    gerarPopulacaoAleatorio();
-    memcpy(&populacao[TAM_POP], &melhor, sizeof(melhor));
+    gerarPopulacao();
+    memcpy(&populacao[0], &melhor, sizeof(melhor));
     ordenarPopulacao(1);
 }
 
@@ -379,12 +399,14 @@ void ordenarPopulacao(const int &inicio) {
 //------------------------------------------------------------------------------
 void gerVizinho(Solucao &s) {
     int pos;
-    do
-        pos = rand() % numAre_;
-    while (s.vetAre[pos] == 1);
-    s.vetAre[pos] = 1;
-    s.numConIns += vetArestas_[pos].nCon;
-    s.numFaiCob += vetArestas_[pos].nFai;
+    for (int i = 0; i < QTD_VIZ_MUT; i++) {
+		do
+			pos = rand() % numAre_;
+		while (s.vetAre[pos] == 1);
+		s.vetAre[pos] = 1;
+		s.numConIns += vetArestas_[pos].nCon;
+		s.numFaiCob += vetArestas_[pos].nFai;
+	}
     //-----------------------
     // remover contadores at? que a solu??o fique vi?vel
     while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
@@ -577,6 +599,10 @@ void escreverSolucao(Solucao &s, FILE *f) {
 //------------------------------------------------------------------------------
 void escreverResultado(Solucao &s, char *path) {
     FILE *f = fopen(path, "w");
+
+	fprintf(f,"INST:%s\tALFA:%i\tBETA:%i\tNUM_EXE:%i\tMAX_TIME:%.1f\tTAM_POP:%i\tPER_REM:%i\tQTD_REM_GUL:%i\tPRC_MUT:%i\tQTD_VIZ_MUT:%i\tPRC_GUL:%i\n",
+		   INST, ALFA, BETA, NUM_EXE, MAX_TIME, TAM_POP, PER_REM, QTD_REM_GUL, PRC_MUT, QTD_VIZ_MUT, PRC_GUL);
+
     fprintf(f, "< ---------------------------- PROBLEMA ---------------------------- >\n");
     fprintf(f, "Instancia...........................................: %s\n", INST);
     fprintf(f, "Reduzida............................................: NAO\n");
