@@ -62,16 +62,15 @@ int maxContReal_; // número máximo REAL de contadores (definido com base no limi
 //--------------------------------- MÉTODOS ---------------------------------
 // ------------ Genetico
 // geraldo
-void execGA();
+void execGA(const int r);
 void gerarFilho(const int &p1,const int &p2,int f);
 void gerarPopulacao();
-void gerarPopulacaoAleatorio();
 void gulosidade(Solucao &s);
 void epidemia();
 void ordenarPopulacao(const int &inicio);
 
 // ------------ SA
-void execSA(Solucao &s);
+void execSA(const int p);
 
 void gerVizinho(Solucao &s);
 
