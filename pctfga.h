@@ -56,6 +56,7 @@ int maxPar_;      // número máximo de pares cobertos
 int maxCont_;     // número máximo de contadores a serem instalados  
 int maxFaix_;     // número máximo de faixas a serem cobertas
 int maxContReal_; // número máximo REAL de contadores (definido com base no limite de contadores e faixas)
+int numCro_;
 //---------------------------------------------------------------------------
 
 

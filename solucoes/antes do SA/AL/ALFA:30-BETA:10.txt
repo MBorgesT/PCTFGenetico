@@ -1,0 +1,57 @@
+INST:AL	ALFA:30	BETA:10	NUM_EXE:1	MAX_TIME:1200.0	TAM_POP:100	PRC_REM:25	QTD_REM_GUL:12	PRC_MUT:20	QTD_VIZ_MUT:15	PRC_GUL:20
+< ---------------------------- PROBLEMA ---------------------------- >
+Instancia...........................................: AL
+Reduzida............................................: NAO
+Limite de contadores instalados.....................: 72 (30% arestas sem reducao)
+Limite de faixas cobertas...........................: 49 (10% faixas sem reducao)
+Numero de nos.......................................: 192
+Numero de arestas...................................: 242
+Numero de arestas virtuais..........................: 0
+Numero total de arestas (sem redu??o)...............: 242
+Numero total de faixas (sem redu??o)................: 490
+Numero de nos que definem os pares..................: 97
+Numero total de pares...............................: 4656
+
+< --------------------------- PARAMETROS --------------------------- >
+Tamanho da popula??o................................: 100
+Porcentagem da chance de muta??o....................: 20
+N. maximo de iteracoes..............................: 1
+Tempo maximo de processamento.......................: 1200.00000 segundos!
+
+< --------------------------- RESULTADOS --------------------------- >
+Tempo para encontrar a melhor solucao (BST).........: 193.04464 segundos!
+Tempo de execucao do metodo.........................: 0.00000 segundos!
+
+< ---------------------------- SOLUCAO ----------------------------- >
+Numero de postos de contagem instalados.............: 24 (max = 72)
+Numero de faixas cobertas...........................: 48 (max = 49)
+Numero de pares OD cobertos (FO)....................: 4204
+
+Vetor solucao: [ 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 1 1 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+
+-----------------------
+>>> ARESTAS PARA INSTALACAO DOS POSTOS DE CONTAGEM:
+14447 (1)
+14587 (1)
+14609 (1)
+14652 (1)
+14677 (1)
+14704 (1)
+14717 (1)
+14720 (1)
+14725 (1)
+14737 (1)
+14762 (1)
+14763 (1)
+14808 (1)
+14843 (1)
+14860 (1)
+14879 (1)
+14880 (1)
+14887 (1)
+14924 (1)
+14976 (1)
+14980 (1)
+14998 (1)
+15035 (1)
+15114 (1)

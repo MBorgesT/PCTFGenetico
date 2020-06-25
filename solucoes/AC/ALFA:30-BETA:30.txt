@@ -1,0 +1,67 @@
+INST:AC	ALFA:30	BETA:30	NUM_EXE:1	MAX_TIME:20.0	TAM_POP:100	PER_REM:30	QTD_REM_GUL:5	PRC_MUT:80
+< ---------------------------- PROBLEMA ---------------------------- >
+Instancia...........................................: AC
+Reduzida............................................: NAO
+Limite de contadores instalados.....................: 34 (30% arestas sem reducao)
+Limite de faixas cobertas...........................: 69 (30% faixas sem reducao)
+Numero de nos.......................................: 91
+Numero de arestas...................................: 114
+Numero de arestas virtuais..........................: 0
+Numero total de arestas (sem redu??o)...............: 114
+Numero total de faixas (sem redu??o)................: 232
+Numero de nos que definem os pares..................: 20
+Numero total de pares...............................: 190
+
+< --------------------------- PARAMETROS --------------------------- >
+Tamanho da popula??o................................: 100
+Porcentagem da chance de muta??o....................: 80
+N. maximo de iteracoes..............................: 1
+Tempo maximo de processamento.......................: 20.00000 segundos!
+
+< --------------------------- RESULTADOS --------------------------- >
+Tempo para encontrar a melhor solucao (BST).........: 0.52503 segundos!
+Tempo de execucao do metodo.........................: 0.00000 segundos!
+
+< ---------------------------- SOLUCAO ----------------------------- >
+Numero de postos de contagem instalados.............: 34 (max = 34)
+Numero de faixas cobertas...........................: 68 (max = 69)
+Numero de pares OD cobertos (FO)....................: 190
+
+Vetor solucao: [ 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 1 1 1 1 0 0 1 1 0 0 1 0 1 0 1 1 0 0 1 0 0 0 0 1 0 1 0 0 0 1 1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 1 1 0 1 0 0 0 0 0 0 1 1 0 1 0 1 0 1 1 0 0 0 0 0 0 0 1 0 0 1 0 1 0 0 0 0 0 ]
+
+-----------------------
+>>> ARESTAS PARA INSTALACAO DOS POSTOS DE CONTAGEM:
+14004 (1)
+14062 (1)
+14211 (1)
+14267 (1)
+14461 (1)
+14540 (1)
+14565 (1)
+14583 (1)
+14584 (1)
+14687 (1)
+14759 (1)
+15145 (1)
+15344 (1)
+15482 (1)
+15507 (1)
+15766 (1)
+15901 (1)
+15905 (1)
+20424 (1)
+20425 (1)
+20458 (1)
+20461 (1)
+20472 (1)
+20473 (1)
+20475 (1)
+20483 (1)
+20484 (1)
+20486 (1)
+20488 (1)
+20490 (1)
+20491 (1)
+20611 (1)
+20614 (1)
+20616 (1)

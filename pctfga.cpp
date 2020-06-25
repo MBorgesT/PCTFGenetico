@@ -17,26 +17,26 @@
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 //============================== DADOS DE ENTRADA ==============================
-char INST[50] = "AC";  // arquivo com a inst?ncia (estado)
+char INST[50] = "MG";  // arquivo com a inst?ncia (estado)
 int ALFA = 30;    // limite de contadores instalados (% do total de arestas)
 int BETA = 30;    // limite de faixas cobertas (% do total de faixas)
-int NUM_EXE = 1;     // n?mero de execu??es do metodo
-double MAX_TIME = 20.0;  // tempo m?ximo de execu??o (segundos)
+int NUM_EXE = 3;     // n?mero de execu??es do metodo
+double MAX_TIME = 1200.0;  // tempo m?ximo de execu??o (segundos)
 int MAX_ITE = 1;     // n?mero m?ximo de itera??es (MAX_ITE = MAX_ITE * n?mero de arestas)
 // ------------------------------- GENETICO ---------------------------------
-int TAM_POP = 100; // 700
-int NUM_CRO = 20; // n?mero de cruzamentos em cada gera??o (usado no AG)
-int PRC_REM = 30; // percentual de remo??o de contadores (usado na gera??o da popula??o inicial)
-int QTD_REM_GUL = 5; // numero dentre quantas arestas serao testadas para decidir qual a melhor inserir na geracao de populacao
-int PRC_MUT = 80; // chance de se ocorrer uma mutacao
-int PRM_SAN = 20;
-//==============================================================================
+int TAM_POP = 100;
+int PRC_REM = 65; // percentual de remo??o de contadores (usado na gera??o da popula??o inicial)
+int QTD_REM_GUL = 3; // numero dentre quantas arestas serao testadas para decidir qual a melhor inserir na geracao de populacao
+int PRC_MUT = 80; // chance de se ocorrer uma mutacao (geracao de vizinho)
+int PRC_TAM_CRO = 10;
 // ---------------------------------- SA ------------------------------------
+int PRM_SAN = 20;
 float TMP_INI = 3000;
 float TMP_CNG = 0.01;
 float TAX_RSF = 0.985;
 int SAN_MAX = 10;
-
+// ----------------------------- aux calibracao -----------------------------
+int vetFOs[5];
 //================================== PRINCIPAL =================================
 int main(int argc, char *argv[]) {
     char arq[50];
@@ -49,16 +49,51 @@ int main(int argc, char *argv[]) {
         strcpy(INST, argv[1]);
         ALFA = atoi(argv[2]);
         BETA = atoi(argv[3]);
+        NUM_EXE = atoi(argv[4]);
+        MAX_TIME = atof(argv[5]);
+        TAM_POP = atoi(argv[6]);
+        PRC_REM = atoi(argv[7]);
+        QTD_REM_GUL = atoi(argv[8]);
+        PRC_MUT = atoi(argv[9]);
+        PRC_TAM_CRO = atoi(argv[10]);
     }
+
+    numCro_ = TAM_POP * ((float)PRC_TAM_CRO / 100);
 
     sprintf(arq, "../Instancias/%s.txt", INST);
     lerInstancia(arq);
 
     montarRede();
 
+
+    #ifdef ESCREVER_SOL
+    FILE *f = fopen("calibracao_ga.txt", "a");
+    float mediaFOs = 0;
+    int melhorFO = -1;
+
+	printf("INST: %s\tALFA: %i\tBETA: %i\tNUM_EXE: %i\tMAX_TIME: %.1f\nTAM_POP: %i\tPRC_REM: %i\tQTD_REM_GUL: %i\tPRC_MUT: %i\tPRC_TAM_CRO: %i\n",
+			INST, ALFA, BETA, NUM_EXE, MAX_TIME, TAM_POP, PRC_REM, QTD_REM_GUL, PRC_MUT, PRC_TAM_CRO);
+	#endif
+
     for (int r = 0; r < NUM_EXE; r++) {
         execGA(r);
+		#ifdef ESCREVER_SOL
+        mediaFOs += vetFOs[r];
+        if (vetFOs[r] > melhorFO)
+        	melhorFO = vetFOs[r];
+		#endif
     }
+    mediaFOs /= NUM_EXE;
+    float desvio = ((melhorFO - mediaFOs)/melhorFO) * 100;
+
+	#ifdef ESCREVER_SOL
+    fprintf(f, "MEDIA FOS: %.2f\tDESVIO: %f\tNUM_EXE: %i\tMAX_TIME: %.1f\tTAM_POP: %i\tPRC_REM: %i\tQTD_REM_GUL: %i\tPRC_MUT: %i\tPRC_TAM_CRO: %i\n",
+			mediaFOs, desvio, NUM_EXE, MAX_TIME, TAM_POP, PRC_REM, QTD_REM_GUL, PRC_MUT, PRC_TAM_CRO);
+
+    fclose(f);
+
+    printf("MEDIA FOS: %.2f\tDESVIO: %f\n\n", mediaFOs, desvio);
+	#endif
 
     return 0;
 }
@@ -71,7 +106,7 @@ void execGA(const int r) {
 	printf("INST:%s\tALFA:%i\tBETA:%i\tNUM_EXE:%i\tMAX_TIME:%.1f\tTAM_POP:%i\tPER_REM:%i\tQTD_REM_GUL:%i\tPRC_MUT:%i\n",
 		   INST, ALFA, BETA, NUM_EXE, MAX_TIME, TAM_POP, PRC_REM, QTD_REM_GUL, PRC_MUT);
 		   */
-	printf("INST: %s\tALFA: %i\tBETA: %i\n", INST, ALFA, BETA);
+	printf("\nr: %i\n", r);
 	#endif
 
     double h1, h2, h3;
@@ -105,7 +140,7 @@ void execGA(const int r) {
         aux1 = omp_get_wtime();
         #endif
 
-        for (int i = 0; i < NUM_CRO; i++) {
+        for (int i = 0; i < numCro_; i++) {
             p1 = rand() % TAM_POP;
             do
                 p2 = rand() % TAM_POP;
@@ -148,6 +183,7 @@ void execGA(const int r) {
             qtdEpi++;
             #endif
         }
+
         qtdGen++;
 
         h2 = omp_get_wtime();
@@ -157,7 +193,10 @@ void execGA(const int r) {
         #endif
     }
 
+
+
 	#ifdef ESCREVER_SOL
+	vetFOs[r] = populacao[0].numParCob;
     char path[100];
     sprintf(path, "../solucoes/%s/ALFA:%i-BETA:%i.txt", INST, ALFA, BETA);
     escreverResultado(populacao[0], path);
@@ -170,27 +209,44 @@ void execGA(const int r) {
 }
 
 void gerarFilho(const int &p1, const int &p2, int f) {
-    int aux = 1 + rand() % (numAre_ - 2);
-    memset(populacao[f].vetAre, 0, sizeof(populacao[f].vetAre));
-    populacao[f].numConIns = populacao[f].numFaiCob = populacao[f].numAreCom = 0;
-    for (int i = 0; i < aux; i++) {
-        populacao[f].vetAre[i] = populacao[p1].vetAre[i];
-        populacao[f].numConIns += (populacao[p1].vetAre[i] * vetArestas_[i].nCon);
-        populacao[f].numFaiCob += (populacao[p1].vetAre[i] * vetArestas_[i].nFai);
-        populacao[f].numAreCom += (populacao[p1].vetAre[i]);
-    }
-    for (int i = aux; i < numAre_; i++) {
-        populacao[f].vetAre[i] = populacao[p2].vetAre[i];
-        populacao[f].numConIns += (populacao[p2].vetAre[i] * vetArestas_[i].nCon);
-        populacao[f].numFaiCob += (populacao[p2].vetAre[i] * vetArestas_[i].nFai);
-        populacao[f].numAreCom += (populacao[p2].vetAre[i]);
-    }
+	int aux = 1 + rand() % (numAre_ - 2);
+	memset(populacao[f].vetAre, 0, sizeof(populacao[f].vetAre));
+	populacao[f].numConIns = populacao[f].numFaiCob = populacao[f].numAreCom = 0;
+	for (int i = 0; i < aux; i++) {
+		populacao[f].vetAre[i] = populacao[p1].vetAre[i];
+		populacao[f].numConIns += (populacao[p1].vetAre[i] * vetArestas_[i].nCon);
+		populacao[f].numFaiCob += (populacao[p1].vetAre[i] * vetArestas_[i].nFai);
+		populacao[f].numAreCom += (populacao[p1].vetAre[i]);
+	}
+	for (int i = aux; i < numAre_; i++) {
+		populacao[f].vetAre[i] = populacao[p2].vetAre[i];
+		populacao[f].numConIns += (populacao[p2].vetAre[i] * vetArestas_[i].nCon);
+		populacao[f].numFaiCob += (populacao[p2].vetAre[i] * vetArestas_[i].nFai);
+		populacao[f].numAreCom += (populacao[p2].vetAre[i]);
+	}
 
+	/*
 	int pos;
-	while ((populacao[f].numConIns > maxContReal_) || (populacao[f].numFaiCob > maxFaix_)) {
-		do
-			pos = rand() % numAre_;
-		while (populacao[f].vetAre[pos] == 0);
+	if ((populacao[f].numConIns > maxContReal_) || (populacao[f].numFaiCob > maxFaix_)) {
+		while ((populacao[f].numConIns > maxContReal_) || (populacao[f].numFaiCob > maxFaix_)) {
+			do
+				pos = rand() % numAre_;
+			while (populacao[f].vetAre[pos] == 0);
+			populacao[f].vetAre[pos] = 0;
+			populacao[f].numConIns -= vetArestas_[pos].nCon;
+			populacao[f].numFaiCob -= vetArestas_[pos].nFai;
+			populacao[f].numAreCom--;
+		}
+	} else {
+		while ((populacao[f].numConIns <= maxContReal_) && (populacao[f].numFaiCob <= maxFaix_)) {
+			do
+				pos = rand() % numAre_;
+			while (populacao[f].vetAre[pos] == 1);
+			populacao[f].vetAre[pos] = 1;
+			populacao[f].numConIns += vetArestas_[pos].nCon;
+			populacao[f].numFaiCob += vetArestas_[pos].nFai;
+			populacao[f].numAreCom++;
+		}
 		populacao[f].vetAre[pos] = 0;
 		populacao[f].numConIns -= vetArestas_[pos].nCon;
 		populacao[f].numFaiCob -= vetArestas_[pos].nFai;
@@ -202,6 +258,16 @@ void gerarFilho(const int &p1, const int &p2, int f) {
     }
 
     calcParCob(populacao[f]);
+
+    */
+
+	if (rand() % 100 < PRC_MUT){
+		gerVizinho(populacao[f]);
+	}
+
+	calcParCob(populacao[f]);
+
+	gulosidade(populacao[f]);
 
     if (rand() % 1000 < PRM_SAN) {
         execSA(f);
@@ -216,7 +282,7 @@ void gerarPopulacao() {
     double aux1, aux2, aux3, aux4, aux5;
 #endif
 
-    for (int p = 0; p < TAM_POP + NUM_CRO; p++) {
+    for (int p = 0; p < TAM_POP + numCro_; p++) {
         memset(populacao[p].vetAre, 0, sizeof(populacao[p].vetAre));
         populacao[p].numConIns = populacao[p].numFaiCob = 0;
         populacao[p].numAreCom = numAre_;
@@ -291,22 +357,23 @@ void gerarPopulacao() {
 }
 
 void gulosidade(Solucao &s) {
-    int melhorFO, melhorId, flag = 0, aux, aux2, foAnterior;
+    int melhorFO, melhorId, flag = 0, aux2, foAnterior, randId;
     while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
         flag = 1;
         melhorFO = melhorId = -1;
-        for (int i = 0; i < numAre_; i++) {
-            if (s.vetAre[i] == 1) {
-                aux2 = s.numParCob;
-                s.vetAre[i] = 0;
-                calcParCob(s);
-                if (s.numParCob > melhorFO) {
-                    melhorFO = s.numParCob;
-                    melhorId = i;
-                }
-                s.vetAre[i] = 1;
-                s.numParCob = aux2;
-            }
+        for (int i = 0; i < QTD_REM_GUL; i++) {
+        	do
+        		randId = rand() % numAre_;
+        	while (s.vetAre[randId] == 0);
+			aux2 = s.numParCob;
+			s.vetAre[randId] = 0;
+			calcParCob(s);
+			if (s.numParCob > melhorFO) {
+				melhorFO = s.numParCob;
+				melhorId = randId;
+			}
+			s.vetAre[randId] = 1;
+			s.numParCob = aux2;
         }
         s.vetAre[melhorId] = 0;
         s.numConIns -= vetArestas_[melhorId].nCon;
@@ -317,20 +384,20 @@ void gulosidade(Solucao &s) {
     if (flag == 0 && s.numConIns != maxContReal_ && s.numFaiCob != maxFaix_) {
         while ((s.numConIns < maxContReal_) && (s.numFaiCob < maxFaix_)) {
             melhorFO = melhorId = -1;
-            aux = rand() % numAre_;
             foAnterior = s.numParCob;
-            for (int i = aux; i < numAre_; i++) {
-                if (s.vetAre[i] == 0) {
-                    aux2 = s.numParCob;
-                    s.vetAre[i] = 1;
-                    calcParCob(s);
-                    if (s.numParCob > melhorFO) {
-                        melhorFO = s.numParCob;
-                        melhorId = i;
-                    }
-                    s.vetAre[i] = 0;
-                    s.numParCob = aux2;
-                }
+            for (int i = 0; i < QTD_REM_GUL; i++) {
+            	do
+            		randId = rand() % numAre_;
+            	while (s.vetAre[randId] == 1);
+				aux2 = s.numParCob;
+				s.vetAre[randId] = 1;
+				calcParCob(s);
+				if (s.numParCob > melhorFO) {
+					melhorFO = s.numParCob;
+					melhorId = randId;
+				}
+				s.vetAre[randId] = 0;
+				s.numParCob = aux2;
             }
             s.vetAre[melhorId] = 1;
             s.numConIns += vetArestas_[melhorId].nCon;
@@ -362,7 +429,7 @@ void epidemia() {
 void ordenarPopulacao(const int &inicio) {
     Solucao escolhido;
     int j;
-    for (int i = inicio; i < TAM_POP + NUM_CRO; i++) {
+    for (int i = inicio; i < TAM_POP + numCro_; i++) {
         memcpy(&escolhido, &populacao[i], sizeof(populacao[i]));
         j = i - 1;
         while ((j >= 0) && (populacao[j].numParCob < escolhido.numParCob)) {
@@ -422,12 +489,12 @@ void execSA(const int p){
 //------------------------------------------------------------------------------
 void gerVizinho(Solucao &s) {
     int pos;
-    do
-    	pos = rand() % numAre_;
-    while (s.vetAre[pos] == 1);
-    s.vetAre[pos] = 1;
-    s.numConIns += vetArestas_[pos].nCon;
-    s.numFaiCob += vetArestas_[pos].nFai;
+	do
+		pos = rand() % numAre_;
+	while (s.vetAre[pos] == 1);
+	s.vetAre[pos] = 1;
+	s.numConIns += vetArestas_[pos].nCon;
+	s.numFaiCob += vetArestas_[pos].nFai;
     //-----------------------
     // remover contadores at? que a solu??o fique vi?vel
     while ((s.numConIns > maxContReal_) || (s.numFaiCob > maxFaix_)) {
