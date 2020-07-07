@@ -33,6 +33,8 @@ typedef struct tSolucao {
 // ----- Genetico
 Solucao populacao[MAX_POP]; // geraldo
 int limRemocao_; // geraldo
+int tamElt_;
+int limSup_;
 // ----- Dados de entrada
 int numPar_; // número de pares O-D 
 int numNos_; // número de nós na rede
@@ -48,9 +50,8 @@ int *vetQtdAdj_;  // vetor com a quantidade de nós (e arestas) adjacentes a cada
 int **matNosAdj_; // matriz com os nós adjacentes a cada nó
 int **matAreAdj_; // matriz com as arestas adjacentes a cada nó
 // ----- Resultados
-int foIni_, foFin_;        // função objetivo das soluções inicial e final
+int bstFO_;
 double bstTime_, excTime_; // tempo para encontrar a melhor solução e tempo total
-int solAva_;              // número de soluções avaliadas pelo CS
 // ----- Variáveis auxiliares
 int maxPar_;      // número máximo de pares cobertos
 int maxCont_;     // número máximo de contadores a serem instalados  
@@ -69,6 +70,7 @@ void gerarPopulacao();
 void gulosidade(Solucao &s);
 void epidemia();
 void ordenarPopulacao(const int &inicio);
+void gerVizinhoGul(const int p);
 
 // ------------ SA
 void execSA(const int p);

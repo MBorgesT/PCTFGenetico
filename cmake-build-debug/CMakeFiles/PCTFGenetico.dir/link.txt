@@ -1,1 +1,1 @@
-/usr/bin/c++   -fopenmp -g    CMakeFiles/PCTFGenetico.dir/pctfga.cpp.o  -o PCTFGenetico 
+/usr/bin/c++   -fopenmp -std=c++11 -fopenmp -g    CMakeFiles/PCTFGenetico.dir/pctfga.cpp.o  -o PCTFGenetico 

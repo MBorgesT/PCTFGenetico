@@ -6,35 +6,37 @@
 #include <time.h>
 #include <omp.h>
 
-#define DBG // habilita o modo DEBUG (exibe na tela as melhoras na FO)
+//#define DBG // habilita o modo DEBUG (exibe na tela as melhoras na FO)
 #define RND // habilita m?ltiplas (NUM_EXE) execu??es com sementes aleat?rias para a inst?ncia
 //#define DBG_TEMPO_GERACAO // habilita medidor de tempo de cada parte da gera??o da popula??o
 //#define DBG_TEMPO_GA // habilita medidor de tempo de cada parte do algoritmo genetico
 //#define DBG_TEMPO_SA
-#define ESCREVER_SOL
+//#define ESCREVER_SOL
+#define IRACE
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 //============================== DADOS DE ENTRADA ==============================
-char INST[50] = "MG";  // arquivo com a inst?ncia (estado)
+char INST[50] = "AC";  // arquivo com a inst?ncia (estado)
 int ALFA = 30;    // limite de contadores instalados (% do total de arestas)
 int BETA = 30;    // limite de faixas cobertas (% do total de faixas)
-int NUM_EXE = 3;     // n?mero de execu??es do metodo
-double MAX_TIME = 1200.0;  // tempo m?ximo de execu??o (segundos)
+int NUM_EXE = 1;     // n?mero de execu??es do metodo
+double MAX_TIME = 600.0;  // tempo m?ximo de execu??o (segundos)
 int MAX_ITE = 1;     // n?mero m?ximo de itera??es (MAX_ITE = MAX_ITE * n?mero de arestas)
 // ------------------------------- GENETICO ---------------------------------
 int TAM_POP = 100;
-int PRC_REM = 65; // percentual de remo??o de contadores (usado na gera??o da popula??o inicial)
-int QTD_REM_GUL = 3; // numero dentre quantas arestas serao testadas para decidir qual a melhor inserir na geracao de populacao
+int PRC_REM = 70; // percentual de remo??o de contadores (usado na gera??o da popula??o inicial)
+int QTD_REM_GUL = 4; // numero dentre quantas arestas serao testadas para decidir qual a melhor inserir na geracao de populacao
 int PRC_MUT = 80; // chance de se ocorrer uma mutacao (geracao de vizinho)
 int PRC_TAM_CRO = 10;
+int PRC_ELT = 35;
 // ---------------------------------- SA ------------------------------------
-int PRM_SAN = 20;
-float TMP_INI = 3000;
+int PRM_SAN = 50; // 50
+float TMP_INI = 10000;
 float TMP_CNG = 0.01;
 float TAX_RSF = 0.985;
-int SAN_MAX = 10;
+int SAN_MAX = 10; // 10
 // ----------------------------- aux calibracao -----------------------------
 int vetFOs[5];
 //================================== PRINCIPAL =================================
@@ -47,18 +49,22 @@ int main(int argc, char *argv[]) {
 #endif
     if (argc > 1) {
         strcpy(INST, argv[1]);
-        ALFA = atoi(argv[2]);
-        BETA = atoi(argv[3]);
-        NUM_EXE = atoi(argv[4]);
-        MAX_TIME = atof(argv[5]);
-        TAM_POP = atoi(argv[6]);
-        PRC_REM = atoi(argv[7]);
-        QTD_REM_GUL = atoi(argv[8]);
-        PRC_MUT = atoi(argv[9]);
-        PRC_TAM_CRO = atoi(argv[10]);
+        BETA = atoi(argv[2]);
+        TAM_POP = atoi(argv[3]);
+        PRC_REM = atoi(argv[4]);
+        QTD_REM_GUL = atoi(argv[5]);
+        PRC_MUT = atoi(argv[6]);
+        PRC_TAM_CRO = atoi(argv[7]);
+        PRC_ELT = atoi(argv[8]);
+        PRM_SAN = atoi(argv[9]);
+        TMP_INI = atof(argv[10]);
+        TMP_CNG = atof(argv[11]);
+        TAX_RSF = atof(argv[12]);
+        SAN_MAX = atoi(argv[13]);
     }
 
     numCro_ = TAM_POP * ((float)PRC_TAM_CRO / 100);
+    tamElt_ = TAM_POP * ((float)PRC_ELT / 100);
 
     sprintf(arq, "../Instancias/%s.txt", INST);
     lerInstancia(arq);
@@ -71,8 +77,9 @@ int main(int argc, char *argv[]) {
     float mediaFOs = 0;
     int melhorFO = -1;
 
-	printf("INST: %s\tALFA: %i\tBETA: %i\tNUM_EXE: %i\tMAX_TIME: %.1f\nTAM_POP: %i\tPRC_REM: %i\tQTD_REM_GUL: %i\tPRC_MUT: %i\tPRC_TAM_CRO: %i\n",
-			INST, ALFA, BETA, NUM_EXE, MAX_TIME, TAM_POP, PRC_REM, QTD_REM_GUL, PRC_MUT, PRC_TAM_CRO);
+	printf("INST: %s\tALFA: %i\tBETA: %i\tNUM_EXE: %i\tMAX_TIME: %.1f\nTAM_POP: %i\tPRC_REM: %i\tQTD_REM_GUL: %i\tPRC_MUT: %i\tPRC_TAM_CRO: %i\tPRC_ELT: %i\n",
+			INST, ALFA, BETA, NUM_EXE, MAX_TIME, TAM_POP, PRC_REM, QTD_REM_GUL, PRC_MUT, PRC_TAM_CRO, PRC_ELT);
+	printf("PRM_SAN: %i\tTMP_INI: %.1f\tTMP_CNG: %.3f\tTAX_RSF: %.3f\tSAN_MAX: %i\n", PRM_SAN, TMP_INI, TMP_CNG, TAX_RSF, SAN_MAX);
 	#endif
 
     for (int r = 0; r < NUM_EXE; r++) {
@@ -83,12 +90,15 @@ int main(int argc, char *argv[]) {
         	melhorFO = vetFOs[r];
 		#endif
     }
-    mediaFOs /= NUM_EXE;
-    float desvio = ((melhorFO - mediaFOs)/melhorFO) * 100;
 
 	#ifdef ESCREVER_SOL
-    fprintf(f, "MEDIA FOS: %.2f\tDESVIO: %f\tNUM_EXE: %i\tMAX_TIME: %.1f\tTAM_POP: %i\tPRC_REM: %i\tQTD_REM_GUL: %i\tPRC_MUT: %i\tPRC_TAM_CRO: %i\n",
-			mediaFOs, desvio, NUM_EXE, MAX_TIME, TAM_POP, PRC_REM, QTD_REM_GUL, PRC_MUT, PRC_TAM_CRO);
+	mediaFOs /= NUM_EXE;
+	float desvio = ((melhorFO - mediaFOs)/melhorFO) * 100;
+
+	fprintf(f, "MEDIA FOS: %.2f\tDESVIO: %f\n", mediaFOs, desvio);
+	fprintf(f, "INST: %s\tALFA: %i\tBETA: %i\tNUM_EXE: %i\tMAX_TIME: %.1f\nTAM_POP: %i\tPRC_REM: %i\tQTD_REM_GUL: %i\tPRC_MUT: %i\tPRC_TAM_CRO: %i\tPRC_ELT: %i\n",
+		   INST, ALFA, BETA, NUM_EXE, MAX_TIME, TAM_POP, PRC_REM, QTD_REM_GUL, PRC_MUT, PRC_TAM_CRO, PRC_ELT);
+	fprintf(f, "PRM_SAN: %i\tTMP_INI: %.1f\tTMP_CNG: %.3f\tTAX_RSF: %.3f\tSAN_MAX: %i\n\n", PRM_SAN, TMP_INI, TMP_CNG, TAX_RSF, SAN_MAX);
 
     fclose(f);
 
@@ -109,15 +119,17 @@ void execGA(const int r) {
 	printf("\nr: %i\n", r);
 	#endif
 
-    double h1, h2, h3;
-    double tempoGastoEpi = 0, auxEpi1, auxEpi2;
-
     #ifdef DBG_TEMPO_GA
     double aux1, aux2, aux3;
     #endif
 
     int flag, qtdGen = 0, qtdEpi = 0;
+	double h1, h2, h3;
+	double tempoGastoEpi = 0, auxEpi1, auxEpi2;
+
+	bstFO_ = -1;
     limRemocao_ = floor((PRC_REM / 100.0) * (numAre_ - maxContReal_));
+
     h1 = omp_get_wtime();
     gerarPopulacao();
 
@@ -141,17 +153,14 @@ void execGA(const int r) {
         #endif
 
         for (int i = 0; i < numCro_; i++) {
-            p1 = rand() % TAM_POP;
+            p1 = rand() % tamElt_;
             do
                 p2 = rand() % TAM_POP;
             while (p2 == p1);
-            gerarFilho(p1, p2, TAM_POP + i);
-            if (populacao[TAM_POP + i].numParCob > populacao[0].numParCob) {
-                bstTime_ = omp_get_wtime() - h1;
-                #ifdef DBG
-                printf("NOVO: bstSol: %i\tbstTempo: %.4f\n", populacao[TAM_POP + i].numParCob, bstTime_);
-                #endif
-            }
+            if (rand() % 2)
+            	gerarFilho(p1, p2, TAM_POP + i);
+            else
+				gerarFilho(p2, p1, TAM_POP + i);
         }
 
         #ifdef DBG_TEMPO_GA
@@ -162,7 +171,17 @@ void execGA(const int r) {
 
         #ifdef DBG_TEMPO_GA
         aux3 = omp_get_wtime();
-        #endif
+		#endif
+
+
+
+		if (populacao[0].numParCob > bstFO_) {
+			bstTime_ = omp_get_wtime() - h1;
+			bstFO_ = populacao[0].numParCob;
+			#ifdef DBG
+			printf("NOVO: bstSol: %i\tbstTempo: %.4f\n", bstFO_, bstTime_);
+			#endif
+		}
 
         flag = 1;
         for (int i = 1; i < TAM_POP; i++) {
@@ -174,11 +193,12 @@ void execGA(const int r) {
         if (flag == 1) {
             #ifdef DBG
             auxEpi1 = omp_get_wtime();
-            printf("epidemia\n");
+            printf("INI epidemia: %.4f\n", auxEpi1);
             #endif
             epidemia();
             #ifdef DBG
             auxEpi2 = omp_get_wtime();
+			printf("INI epidemia: %.4f\n", auxEpi2);
             tempoGastoEpi += auxEpi2 - auxEpi1;
             qtdEpi++;
             #endif
@@ -204,13 +224,16 @@ void execGA(const int r) {
 
     #ifdef DBG
     printf("FINAL: bstSol: %i\tbstTempo: %.4f\tqtd gen: %i\tqtd epi: %i\ttempo gasto em epi: %.3f\n\n\n",
-           populacao[0].numParCob, bstTime_, qtdGen, qtdEpi, tempoGastoEpi);
-    #endif
+           bstFO_, bstTime_, qtdGen, qtdEpi, tempoGastoEpi);
+	#endif
+
+	#ifdef IRACE
+    printf("%.1f", float(bstFO_));
+	#endif
 }
 
 void gerarFilho(const int &p1, const int &p2, int f) {
 	int aux = 1 + rand() % (numAre_ - 2);
-	memset(populacao[f].vetAre, 0, sizeof(populacao[f].vetAre));
 	populacao[f].numConIns = populacao[f].numFaiCob = populacao[f].numAreCom = 0;
 	for (int i = 0; i < aux; i++) {
 		populacao[f].vetAre[i] = populacao[p1].vetAre[i];
@@ -283,7 +306,6 @@ void gerarPopulacao() {
 #endif
 
     for (int p = 0; p < TAM_POP + numCro_; p++) {
-        memset(populacao[p].vetAre, 0, sizeof(populacao[p].vetAre));
         populacao[p].numConIns = populacao[p].numFaiCob = 0;
         populacao[p].numAreCom = numAre_;
 
